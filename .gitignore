@@ -1,4 +1,6 @@
-# OSX Junk
-.DS_Store
+# Files
+**/.DS_Store
 
-data/
+# Folders
+**/data/
+**/.ipynb_checkpoints

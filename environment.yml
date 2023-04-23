@@ -1,0 +1,7 @@
+name: vesuvius-challenge-ink-detection-env
+dependencies:
+  - python=3.8.*
+  - opencv
+  - matplotlib
+  - pip:
+    - tiler
