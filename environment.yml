@@ -3,5 +3,8 @@ dependencies:
   - python=3.8.*
   - opencv
   - matplotlib
+  - pytorch::pytorch
+  - pytorch::torchaudio
+  - pytorch::torchvision
   - pip:
     - tiler
