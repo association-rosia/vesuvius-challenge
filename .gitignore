@@ -1,7 +1,18 @@
 # OSX Junk
 .DS_Store
 
-data/
-!src/data
+# Python Junk
+__pycache__
 
+# Personnal file
 asset
+
+# Data files, reachables at kaggle Vesuvius Challenge Ink Detection
+data/
+
+# Models saved
+models/
+
+
+!src/**
+!notebooks/**
