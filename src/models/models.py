@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class ConvBlock3d(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -35,7 +36,6 @@ class EncoderBlock3d(nn.Module):
     def forward(self, inputs):
         x = self.conv(inputs)
         p = self.pool(x)
-
         return x, p
 
 
@@ -66,7 +66,7 @@ class DecoderBlock3d(nn.Module):
 
     def forward(self, inputs, skip):
         x = self.up(inputs)
-        x = torch.cat([x, skip], axis=1)
+        x = torch.cat([x, skip], dim=1)
         x = self.conv(x)
 
         return x
@@ -76,43 +76,45 @@ class UNetDecoder3d(nn.Module):
     def __init__(self, list_channels):
         super().__init__()
         
-        self.nb_block = len(list_channels) - 1 
-        for i in range(self.nb_block, 0, -1):
-            self.__setattr__(f'block_{i}', DecoderBlock3d(list_channels[i], list_channels[i-1]))
+        self.nb_block = len(list_channels) - 1
+        for i in range(self.nb_block, -1, -1):
+            self.__setattr__(f'block_{i - 1}', DecoderBlock3d(list_channels[i], list_channels[i-1]))
         
     def forward(self, inputs, list_skips):
         x = inputs
-        for i in range(self.nb_block, 0, -1):
+        
+        for i in range(self.nb_block - 1, -1, -1):
             x = self.__getattr__(f'block_{i}')(x, list_skips[i])
             
         return x
 
+
 class UNet3d(nn.Module):
-    def __init__(self, list_channels, depth=65):
+    def __init__(self, list_channels, depth=64):
         super().__init__()
         self.encoder = UNetEncoder3d(list_channels[:-1])
 
-        self.bottleneck = ConvBlock3d(list_channels[-2:])
+        self.bottleneck = ConvBlock3d(*list_channels[-2:])
         
         self.decoder = UNetDecoder3d(list_channels[1:])
         
-        self.outputs3d = nn.Conv3d(list_channels[-2], list_channels[-1], kernel_size=1, padding=0)
-        self.outputs2d = nn.Conv2d(depth, 1, kernel_size=1, padding=0)
+        self.outputs3d = nn.Conv3d(list_channels[1], list_channels[0], kernel_size=1, padding=0)
+        self.outputs2d = nn.MaxPool3d((depth, 1, 1))
         
     def forward(self, input):
         # Encoder
         x, list_skips = self.encoder(input)
+        
         # Botteneck
         x = self.bottleneck(x)
+        
         # Decoder
         x = self.decoder(x, list_skips)
+        
         # Classifier 3D
         x = self.outputs3d(x)
+
         # Classifier 2D
-        shape = x.shape
-        x = x.view(shape[0], -1, shape[2], shape[3])
         x = self.outputs2d(x)
         
         return x
-    
-['1', '64', '128', '256', '512', '1024']

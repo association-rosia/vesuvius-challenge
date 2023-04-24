@@ -1,12 +1,11 @@
-import torch
 import torch.nn as nn
 from torchgeometry.losses.dice import DiceLoss
 
 class CombinedLoss(nn.Module):
-    def __init__(self, alpha, beta):
+    def __init__(self, bce_weight, dice_weight):
         super(CombinedLoss, self).__init__()
-        self.alpha = alpha
-        self.beta = beta
+        self.alpha = bce_weight
+        self.beta = dice_weight
         self.bce_loss = nn.BCELoss()
         self.dice_loss = DiceLoss()
         

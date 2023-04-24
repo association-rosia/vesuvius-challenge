@@ -1,7 +1,10 @@
+import os
 from os.path import join
 from tqdm import tqdm
 from typing import Tuple
 from datetime import datetime
+
+import pandas as pd
 
 from sklearn.metrics import precision_recall_fscore_support
 
@@ -10,6 +13,18 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 import wandb
+
+
+ROOT_DIR = join(os.pardir, os.pardir)
+
+def compute_mean_f05score(labels, predictions, coordinates):
+    f05score = None
+
+    df = pd.DataFrame(dict(Labels=labels, Preds=predictions, Coords=coordinates))
+    df.groupby('Coords').mean()
+    # _, _, f05score, _ = precision_recall_fscore_support()
+    
+    return f05score
 
 
 class Trainer:
@@ -37,7 +52,8 @@ class Trainer:
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.timestamp = int(datetime.now().timestamp())
-        self.val_best_r2_score = 0.
+        self.val_best_f05_score = 0.
+
 
     def train_one_epoch(self) -> float:
         """ Train the model for one epoch.
@@ -51,8 +67,7 @@ class Trainer:
 
         pbar = tqdm(self.train_loader, leave=False)
         for i, data in enumerate(pbar):
-            keys_input = ['s_input', 'm_input', 'g_input']
-            inputs = {key: data[key] for key in keys_input}
+            inputs = data['inputs']
             labels = data['target']
 
             # Zero gradients for every batch
@@ -79,6 +94,7 @@ class Trainer:
         train_loss /= len(self.train_loader)
 
         return train_loss
+    
 
     def val_one_epoch(self) -> Tuple[float, float, float, float]:
         """ Validate the model for one epoch.
@@ -87,7 +103,6 @@ class Trainer:
         :rtype: tuple[float, float, float]
         """
         val_loss = 0.
-        observations = []
         val_labels = []
         val_preds = []
 
@@ -95,18 +110,17 @@ class Trainer:
 
         pbar = tqdm(self.val_loader, leave=False)
         for i, data in enumerate(pbar):
-            keys_input = ['s_input', 'm_input', 'g_input']
-            inputs = {key: data[key] for key in keys_input}
-            mask = data['target']
+            inputs = data['inputs']
+            labels = data['target']
 
             outputs = self.model(inputs)
 
-            loss = self.criterion(outputs, mask)
+            loss = self.criterion(outputs, labels)
             val_loss += loss.item()
             epoch_loss = val_loss / (i + 1)
 
-            observations += data['observation'].squeeze().tolist()
-            val_mask += mask.squeeze().tolist()
+
+            val_labels += labels.squeeze().tolist()
             val_preds += outputs.squeeze().tolist()
 
             # Update the progress bar with new metrics values
@@ -115,9 +129,11 @@ class Trainer:
                                  f'Batch Loss: {loss.item():.5f}')
 
         val_loss /= len(self.val_loader)
-        precision, recall, f05_score, _ = precision_recall_fscore_support(val_mask, val_pred, beta=0.5)
+        _, _, f05score, _ = precision_recall_fscore_support(val_labels, val_preds, beta=0.5)
+        mean_f05score = compute_mean_f05score(val_labels, val_preds, data['coords'])
 
-        return val_loss, precision, recall, f05_score
+        return val_loss, mean_f05score, f05score
+    
 
     def save(self, score: float):
         """ Save the model if it is the better than the previous sevaed one.
@@ -142,6 +158,7 @@ class Trainer:
             save_path = join(save_folder, file_name)
             torch.save(self.model, save_path)
 
+
     def train(self):
         """ Main function to train the model. """
         iter_epoch = tqdm(range(self.epochs), leave=False)
@@ -150,28 +167,22 @@ class Trainer:
             iter_epoch.set_description(f'EPOCH {epoch + 1}/{self.epochs}')
             train_loss = self.train_one_epoch()
 
-            val_loss, val_r2_score, val_mean_r2_score = self.val_one_epoch()
+            val_loss, val_f05_score, val_mean_f05_score = self.val_one_epoch()
             self.scheduler.step(val_loss)
-            self.save(val_mean_r2_score)
+            self.save(val_mean_f05_score)
 
             # log the metrics to W&B
             wandb.log({
                 'train_loss': train_loss,
                 'val_loss': val_loss,
-                'val_r2_score': val_r2_score,
-                'val_mean_r2_score': val_mean_r2_score,
-                'val_best_r2_score': self.val_best_r2_score
+                'val_f05_score': val_f05_score,
+                'val_mean_f05_score': val_mean_f05_score,
+                'val_best_f05_score': self.val_best_f05_score
             })
 
             # Write the finished epoch metrics values
             iter_epoch.write(f'EPOCH {epoch + 1}/{self.epochs}: '
                              f'Train = {train_loss:.5f} - '
-                             f'Val = {val_loss:.5f} - '
-                             f'Val R2 = {val_r2_score:.5f} - '
-                             f'Val mean R2 = {val_mean_r2_score:.5f}')
-
-
-# # Create an instance of the combined loss function
-# alpha = 0.7  # Weight for BCE loss
-# beta = 0.3  # Weight for Dice loss
-# loss_function = CombinedLoss(alpha, beta)
+                             f'Val F0.5 = {val_loss:.5f} - '
+                             f'Val mean F0.5 = {val_mean_f05_score:.5f}'
+                             f'Val best F0.5 = {self.val_best_f05_score}')
