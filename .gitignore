@@ -1,6 +1,7 @@
-# OSX Junk
-.DS_Store
+# Files
+**/.DS_Store
 
+# Folders
 # Python Junk
 __pycache__
 
@@ -9,6 +10,10 @@ asset
 
 # Data files, reachables at kaggle Vesuvius Challenge Ink Detection
 data/
+**/.ipynb_checkpoints
+**/.idea
+asset
+
 
 # Models saved
 models/
