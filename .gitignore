@@ -1,7 +1,8 @@
-# OSX Junk
-.DS_Store
+# Files
+**/.DS_Store
 
+# Folders
 data/
-!src/data
-
+**/.ipynb_checkpoints
+**/.idea
 asset
