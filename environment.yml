@@ -1,10 +1,16 @@
 name: vesuvius-challenge-ink-detection-env
 dependencies:
   - python=3.8.*
-  - opencv
-  - matplotlib
+  - pip
+  - conda-forge::opencv
+  - conda-forge::matplotlib
   - pytorch::pytorch
   - pytorch::torchaudio
   - pytorch::torchvision
+  - conda-forge::scikit-learn
+  - conda-forge::wandb
   - pip:
     - tiler
+    - pytorch-lightning # Numpy error using conda
+    - torchgeometry
+    - jupyter
