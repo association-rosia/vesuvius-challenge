@@ -9,7 +9,7 @@ from tiler import Tiler
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
 
-FRAGMENTS_PATH = '../../data/raw/train'
+FRAGMENTS_PATH = 'data/raw/train'
 TRAIN_FRAGMENTS = ['1', '2']
 VAL_FRAGMENTS = ['3']
 
