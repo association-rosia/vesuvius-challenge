@@ -1,11 +1,24 @@
+import os, sys
+# src_path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
+# sys.path.append(src_path)
+
+parent = os.path.abspath(os.path.curdir)
+sys.path.insert(1, parent)
+
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
+import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
 
+from src.models.losses import CombinedLoss
+from src.data.make_dataset import CustomDataset
+from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS
 
 class ConvBlock3d(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-
+        
         self.conv1 = nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm3d(out_channels)
 
@@ -89,9 +102,16 @@ class UNetDecoder3d(nn.Module):
         return x
 
 
-class UNet3d(nn.Module):
-    def __init__(self, list_channels, depth=64):
+class UNet3d(pl.LightningModule):
+    def __init__(
+        self, list_channels, depth=64,
+        learning_rate=0.1, 
+        criterion=CombinedLoss(),
+        batch_size=16,
+        ):
         super().__init__()
+        
+        # Architecture
         self.encoder = UNetEncoder3d(list_channels[:-1])
 
         self.bottleneck = ConvBlock3d(*list_channels[-2:])
@@ -101,6 +121,12 @@ class UNet3d(nn.Module):
         self.outputs3d = nn.Conv3d(list_channels[1], list_channels[0], kernel_size=1, padding=0)
         self.outputs2d = nn.MaxPool3d((depth, 1, 1))
         
+        # Training parameters
+        self.learning_rate = learning_rate
+        self.criterion = criterion
+        self.batch_size = batch_size
+        
+    
     def forward(self, input):
         # Encoder
         x, list_skips = self.encoder(input)
@@ -118,3 +144,58 @@ class UNet3d(nn.Module):
         x = self.outputs2d(x)
         
         return x
+    
+    
+    def training_step(self, batch, batch_idx):
+        inputs, masks = batch
+        
+        # Forward pass
+        outputs = self(inputs)
+        loss = self.criterion(outputs, masks)
+        self.log('train_loss', loss)
+        return loss
+    
+    
+    def validation_step(self, batch, batch_idx):
+        inputs, masks = batch
+        
+        # Forward pass
+        outputs = self(inputs)
+        loss = self.criterion(outputs, masks)
+        self.log('val_loss', loss)
+        return loss
+    
+    def on_validation_end(self) -> None:
+        # evaluate model on the validation dataset
+        # score = f05Score()
+        # self.log('val_f05score': score)
+        return None
+    
+    
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+    
+
+if __name__ == '__main__':
+    wandb_logger = WandbLogger()
+    trainer = pl.Trainer(fast_dev_run=True, logger=wandb_logger)
+    
+    train_dataloader = DataLoader(
+        dataset=CustomDataset(TRAIN_FRAGMENTS),
+        batch_size=16,
+        shuffle=False
+        )
+    
+    val_dataloader = DataLoader(
+        dataset=CustomDataset(VAL_FRAGMENTS),
+        batch_size=16,
+        shuffle=False
+        )
+    
+    model = UNet3d([32, 64, 128])
+    
+    trainer.fit(
+        model=model, 
+        train_dataloaders=train_dataloader,
+        val_dataloaders=val_dataloader
+        )
