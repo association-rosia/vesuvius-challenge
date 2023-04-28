@@ -2,22 +2,11 @@
 **/.DS_Store
 
 # Folders
-# Python Junk
-__pycache__
-
-# Personnal file
-asset
-
-# Data files, reachables at kaggle Vesuvius Challenge Ink Detection
 data/
 **/.ipynb_checkpoints
 **/.idea
-asset
-
+**/__pycache__
+**/wandb
 
 # Models saved
 models/
-
-
-!src/**
-!notebooks/**
