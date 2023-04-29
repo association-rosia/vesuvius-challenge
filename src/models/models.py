@@ -13,7 +13,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from src.models.losses import CombinedLoss
 from src.data.make_dataset import CustomDataset
-from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS
+from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM, DEVICE
 
 class ConvBlock3d(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -29,11 +29,15 @@ class ConvBlock3d(nn.Module):
 
     def forward(self, inputs):
         x = self.conv1(inputs)
+        
         x = self.bn1(x)
+        
         x = self.relu(x)
-
+        
         x = self.conv2(x)
+        
         x = self.bn2(x)
+        
         x = self.relu(x)
 
         return x
@@ -119,6 +123,7 @@ class UNet3d(pl.LightningModule):
         self.decoder = UNetDecoder3d(list_channels[1:])
         
         self.outputs3d = nn.Conv3d(list_channels[1], list_channels[0], kernel_size=1, padding=0)
+
         self.outputs2d = nn.MaxPool3d((depth, 1, 1))
         
         # Training parameters
@@ -127,9 +132,9 @@ class UNet3d(pl.LightningModule):
         self.batch_size = batch_size
         
     
-    def forward(self, input):
+    def forward(self, inputs):
         # Encoder
-        x, list_skips = self.encoder(input)
+        x, list_skips = self.encoder(inputs)
         
         # Botteneck
         x = self.bottleneck(x)
@@ -141,6 +146,7 @@ class UNet3d(pl.LightningModule):
         x = self.outputs3d(x)
 
         # Classifier 2D
+
         x = self.outputs2d(x)
         
         return x
@@ -151,6 +157,7 @@ class UNet3d(pl.LightningModule):
         
         # Forward pass
         outputs = self(inputs)
+
         loss = self.criterion(outputs, masks)
         self.log('train_loss', loss)
         return loss
@@ -177,25 +184,26 @@ class UNet3d(pl.LightningModule):
     
 
 if __name__ == '__main__':
-    wandb_logger = WandbLogger()
-    trainer = pl.Trainer(fast_dev_run=True, logger=wandb_logger)
+    trainer = pl.Trainer(fast_dev_run=True, accelerator=DEVICE)
     
     train_dataloader = DataLoader(
         dataset=CustomDataset(TRAIN_FRAGMENTS),
-        batch_size=16,
-        shuffle=False
+        batch_size=8,
+        shuffle=False,
+        drop_last=True
         )
     
     val_dataloader = DataLoader(
         dataset=CustomDataset(VAL_FRAGMENTS),
-        batch_size=16,
-        shuffle=False
+        batch_size=8,
+        shuffle=False,
+        drop_last=True
         )
     
-    model = UNet3d([32, 64, 128])
+    model = UNet3d(list_channels=[1, 32, 64, 128], depth=Z_DIM).half()
     
     trainer.fit(
         model=model, 
         train_dataloaders=train_dataloader,
-        val_dataloaders=val_dataloader
+        val_dataloaders=val_dataloader,
         )
