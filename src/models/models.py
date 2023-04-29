@@ -184,7 +184,7 @@ class UNet3d(pl.LightningModule):
     
 
 if __name__ == '__main__':
-    trainer = pl.Trainer(fast_dev_run=True, accelerator='gpu', devices=2)
+    trainer = pl.Trainer(fast_dev_run=True, accelerator='gpu', devices=0)
     
     train_dataloader = DataLoader(
         dataset=CustomDataset(TRAIN_FRAGMENTS),
