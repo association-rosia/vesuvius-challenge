@@ -1,21 +1,17 @@
-import os
+import os, sys
+
+parent = os.path.abspath(os.path.curdir)
+sys.path.insert(1, parent)
+
 import glob
 import cv2
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 import numpy as np
 from tiler import Tiler
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
-
-FRAGMENTS_PATH = 'data/raw/train'
-TRAIN_FRAGMENTS = ['1', '2']
-VAL_FRAGMENTS = ['3']
-
-Z_START = 27
-Z_DIM = 10
-TILE_SIZE = 256
+from constant import FRAGMENTS_PATH, TRAIN_FRAGMENTS, Z_START, Z_DIM, TILE_SIZE, DEVICE
 
 
 def tile_fragment(fragment):
@@ -84,5 +80,14 @@ class CustomDataset(Dataset):
 
 if __name__ == '__main__':
     train_dataset = CustomDataset(TRAIN_FRAGMENTS)
-    slices, ink = train_dataset[876]
+    slices, ink = train_dataset[0]
     print(slices.shape, ink.shape)
+    
+    train_dataloader = DataLoader(
+        dataset=train_dataset, 
+        batch_size=8,
+        shuffle=False,
+        )
+    for batch_slices, batch_ink in train_dataloader:
+        print(batch_slices.shape, batch_ink.shape)
+        break
