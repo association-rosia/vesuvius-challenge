@@ -21,7 +21,7 @@ def tile_fragment(fragment):
         fragment_path = os.path.join(FRAGMENTS_PATH, fragment)
     else:
         fragment_path = os.path.join(KAGGLE_FRAGMENTS_PATH, fragment)
-    
+    print(fragment_path, os.path.exists(fragment_path))
     
     slices_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
     slices = [cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE) / 255.0 for slice_path in slices_path]
