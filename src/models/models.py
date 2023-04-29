@@ -13,7 +13,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from src.models.losses import CombinedLoss
 from src.data.make_dataset import CustomDataset
-from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM, DEVICE
+from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
 
 class ConvBlock3d(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -184,7 +184,7 @@ class UNet3d(pl.LightningModule):
     
 
 if __name__ == '__main__':
-    trainer = pl.Trainer(fast_dev_run=True, accelerator=DEVICE)
+    trainer = pl.Trainer(fast_dev_run=True)
     
     train_dataloader = DataLoader(
         dataset=CustomDataset(TRAIN_FRAGMENTS),
