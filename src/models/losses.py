@@ -28,7 +28,3 @@ class CombinedLoss(nn.Module):
         combined_loss = self.alpha * bce_loss + self.beta * dice_loss
         
         return combined_loss
-    
-    def half(self):
-        self.bce_loss = self.bce_loss.half()
-        self.dice_loss = self.dice_loss.half()
