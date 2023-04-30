@@ -200,7 +200,7 @@ if __name__ == '__main__':
         drop_last=True
         )
     
-    model = UNet3d(list_channels=[1, 32, 64, 128], depth=Z_DIM).half()
+    model = UNet3d(list_channels=[1, 32, 64, 128], depth=Z_DIM)
     
     trainer.fit(
         model=model, 
