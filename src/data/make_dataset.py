@@ -55,8 +55,8 @@ def tile_fragment(fragment):
             # for the multi-context dataset we have to create a bigger padded
             # image to retrieve bigger image from the center of the current tile
             tile_bbox = slices_tiler.get_tile_bbox(slices_tile[0])
-            slices_list.append(torch.from_numpy(slices_tile[1].astype('float16')))
-            ink_list.append(torch.from_numpy(ink_tile[1].astype('float16')))
+            slices_list.append(torch.from_numpy(slices_tile[1].astype('float32')))
+            ink_list.append(torch.from_numpy(ink_tile[1].astype('float32')))
 
     slices = torch.stack(slices_list, dim=0).to(DEVICE)
     ink = torch.stack(ink_list, dim=0).to(DEVICE)
@@ -66,8 +66,8 @@ def tile_fragment(fragment):
 
 class CustomDataset(Dataset):
     def __init__(self, fragments):
-        self.slices = torch.HalfTensor().to(DEVICE)
-        self.ink = torch.HalfTensor().to(DEVICE)
+        self.slices = torch.Tensor().to(DEVICE)
+        self.ink = torch.Tensor().to(DEVICE)
 
         for fragment in fragments:
             slices, ink = tile_fragment(fragment)
