@@ -13,7 +13,9 @@ from pytorch_lightning.loggers import WandbLogger
 
 from src.models.losses import CombinedLoss
 from src.data.make_dataset import CustomDataset
+from src.models.metrics import F05Score
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
+
 
 class ConvBlock3d(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -106,13 +108,8 @@ class UNetDecoder3d(nn.Module):
         return x
 
 
-class UNet3d(pl.LightningModule):
-    def __init__(
-        self, list_channels, depth=64,
-        learning_rate=0.1, 
-        criterion=CombinedLoss(),
-        batch_size=16,
-        ):
+class UNet3d(nn.Module):
+    def __init__(self, list_channels, depth=64):
         super().__init__()
         
         # Architecture
@@ -125,11 +122,6 @@ class UNet3d(pl.LightningModule):
         self.outputs3d = nn.Conv3d(list_channels[1], list_channels[0], kernel_size=1, padding=0)
 
         self.outputs2d = nn.MaxPool3d((depth, 1, 1))
-        
-        # Training parameters
-        self.learning_rate = learning_rate
-        self.criterion = criterion
-        self.batch_size = batch_size
         
     
     def forward(self, inputs):
@@ -146,36 +138,66 @@ class UNet3d(pl.LightningModule):
         x = self.outputs3d(x)
 
         # Classifier 2D
-
         x = self.outputs2d(x)
         
         return x
     
     
+class LightningVesuvius(pl.LightningModule):
+    def __init__(
+        self, model,
+        batch_size=16,
+        learning_rate=0.0001, 
+        criterion=CombinedLoss(),
+        val_image_sizes=[],
+        ):
+        super().__init__()
+        
+        # Model
+        self.model = model
+        
+        # Training parameters
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.criterion = criterion
+        self.metric = F05Score(val_image_sizes)
+    
+    
+    def forward(self, inputs):
+        x = self.model(inputs)
+        return x
+    
+    
     def training_step(self, batch, batch_idx):
-        inputs, masks = batch
+        inputs, masks, _, _ = batch
         
         # Forward pass
         outputs = self(inputs)
 
         loss = self.criterion(outputs, masks)
-        self.log('train_loss', loss)
+        self.log('train_loss', loss, prog_bar=True)
         return loss
     
     
     def validation_step(self, batch, batch_idx):
-        inputs, masks = batch
+        inputs, masks, coords, indexes = batch
         
         # Forward pass
         outputs = self(inputs)
         loss = self.criterion(outputs, masks)
-        self.log('val_loss', loss)
+        self.log('val_loss', loss, prog_bar=True)
+        
+        # Update the evaluation metric
+        self.metric.update(outputs, masks, coords, indexes)
+        
         return loss
+    
     
     def on_validation_end(self) -> None:
         # evaluate model on the validation dataset
-        # score = f05Score()
-        # self.log('val_f05score': score)
+        f05_score, sub_f05_score = self.metric.compute()
+        self.log('val_F05Score', f05_score, prog_bar=True)
+        self.log('val_SubF05Score', sub_f05_score)
         return None
     
     
