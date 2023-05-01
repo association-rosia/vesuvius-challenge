@@ -3,6 +3,7 @@ dependencies:
   - python=3.8.*
   - pip
   - conda-forge::opencv
+  - fastai::opencv-python-headless
   - conda-forge::matplotlib
   - pytorch::pytorch
   - pytorch::torchaudio
