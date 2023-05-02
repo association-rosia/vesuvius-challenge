@@ -7,6 +7,8 @@ sys.path.insert(1, parent)
 
 import torch
 import torch.nn as nn
+from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
@@ -146,8 +148,8 @@ class UNet3d(nn.Module):
 class LightningVesuvius(pl.LightningModule):
     def __init__(
         self, model,
-        batch_size=16,
-        learning_rate=0.0001, 
+        learning_rate=0.0001,
+        scheduler_patience=6,
         criterion=CombinedLoss(),
         val_image_sizes=[],
         ):
@@ -157,8 +159,8 @@ class LightningVesuvius(pl.LightningModule):
         self.model = model
         
         # Training parameters
-        self.batch_size = batch_size
         self.learning_rate = learning_rate
+        self.scheduler_patience = scheduler_patience
         self.criterion = criterion
         self.metric = F05Score(val_image_sizes)
     
@@ -196,13 +198,18 @@ class LightningVesuvius(pl.LightningModule):
     def on_validation_end(self) -> None:
         # evaluate model on the validation dataset
         f05_score, sub_f05_score = self.metric.compute()
-        self.log('val_F05Score', f05_score, prog_bar=True)
+        self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
+        
+        self.log('val_best_F05Score', self.best_f05_score, prog_bar=True)
+        self.log('val_F05Score', f05_score)
         self.log('val_SubF05Score', sub_f05_score)
         return None
     
     
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = Adam(self.parameters(), lr=self.learning_rate)
+        scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=self.scheduler_patience, verbose=True)
+        return [optimizer], [scheduler]
     
 
 if __name__ == '__main__':
