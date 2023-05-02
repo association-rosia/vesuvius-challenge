@@ -1,12 +1,9 @@
-import os
-
 import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.models.trainer import Trainer
 from src.models.losses import CombinedLoss
 from src.models.models import LightningVesuvius, UNet3d
 from src.data.make_dataset import CustomDataset, get_image_sizes
