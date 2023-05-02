@@ -1,16 +1,23 @@
-from math import sqrt
+import os
+
 import torch
+from torch.utils.data import DataLoader
+import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from src.models.trainer import Trainer
 from src.models.losses import CombinedLoss
-from src.models.models import UNet3d
+from src.models.models import LightningVesuvius, UNet3d
+from src.data.make_dataset import CustomDataset, get_image_sizes
+
+from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_PATH
 
 import wandb
 
 def main():
     wandb.init(
-        project='visuvius-ink-detection',
-        group='Unet3d',
+        project='vesuvius-challenge-ink-detection'
     )
     
     # empty the GPU cache
@@ -20,10 +27,28 @@ def main():
     device = get_device()
     
     model = get_model(device)
-    train_dataloader, val_dataloader = get_trainer_dataloaders(device)
-    trainer = get_trainer(model, train_dataloader, val_dataloader)
     
-    trainer.train()
+    train_dataloader = DataLoader(
+        dataset=CustomDataset(TRAIN_FRAGMENTS),
+        batch_size=wandb.config.batch_size,
+        shuffle=True,
+        drop_last=True
+        )
+    
+    val_dataloader = DataLoader(
+        dataset=CustomDataset(VAL_FRAGMENTS),
+        batch_size=wandb.config.batch_size,
+        shuffle=False,
+        drop_last=True
+        )
+    
+    trainer = get_trainer()
+    
+    trainer.fit(
+        model=model, 
+        train_dataloaders=train_dataloader,
+        val_dataloaders=val_dataloader,
+        )
 
 
 def get_device():
@@ -38,41 +63,50 @@ def get_device():
 
 
 def get_model(device):
-    num_block = wandb.config.num_block
-    list_channels = [32 * i**2 for i in range(0, num_block + 1)]
-    model = UNet3d(list_channels)
-    model.to(device)
+    if wandb.config.model == 'UNet3d':
+        num_block = wandb.config.num_block
+        list_channels = [32 * i**2 for i in range(0, num_block + 1)]
+        pytorch_model = UNet3d(list_channels)
+        pytorch_model.to(device)
     
-    return model
-
-
-def get_trainer_dataloaders(device):
-    batch_size = wandb.config.batch_size
-    return None
-
-
-def get_trainer(model, train_dataloader, val_dataloader):
+    learning_rate = wandb.config.learning_rate
+    
     dice_weight = wandb.config.dice_weight
-    bce_weight = 1 - dice_weight
-    criterion = CombinedLoss(bce_weight=bce_weight, dice_weight=dice_weight)
+    criterion = CombinedLoss(dice_weight=dice_weight)
     
-    optimizer = torch.optim.AdamW(model.parameters(), lr=wandb.config.learning_rate)
+    scheduler_patience = wandb.config.scheduler_patience
+
+    val_image_sizes = get_image_sizes(VAL_FRAGMENTS)
     
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
-                                                           patience=wandb.config.scheduler_patience,
-                                                           verbose=True)
+    lightning_model = LightningVesuvius(
+        pytorch_model, 
+        learning_rate,
+        scheduler_patience,
+        criterion, 
+        val_image_sizes,
+        )
     
-    trainer_config = {
-        'model': model,
-        'train_dataloader': train_dataloader,
-        'val_dataloader': val_dataloader,
-        'epochs': wandb.config.epochs,
-        'criterion': criterion,
-        'scheduler': scheduler,
-    }
+    return lightning_model
+
+
+def get_trainer():
+    
+    checkpoint_callback = ModelCheckpoint(
+        save_top_k=1,
+        monitor="val_F05Score",
+        mode="max",
+        dirpath= MODELS_PATH,
+        filename="{val_F05Score}-{wandb.name}-{wandb.id}",
+    )
+    
+    lr_monitor = LearningRateMonitor(logging_interval='epoch')
     
     # init the trainer
-    trainer = Trainer(**trainer_config)
+    trainer = pl.Trainer(
+        max_epochs=wandb.config.epochs,
+        callbacks=[lr_monitor, checkpoint_callback],
+        logger=WandbLogger(),
+    )
     
     return trainer
 
