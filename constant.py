@@ -1,12 +1,22 @@
-import os 
+from os.path import join, exists
+from os import pardir
 
-KAGGLE_FRAGMENTS_PATH = '../../input/vesuvius-challenge-ink-detection/train'
-COOKIECUTTER_FRAGMENTS_PATH = 'data/raw/train'
-FRAGMENTS_PATH =  COOKIECUTTER_FRAGMENTS_PATH if os.path.exists(COOKIECUTTER_FRAGMENTS_PATH) else KAGGLE_FRAGMENTS_PATH
+KAGGLE_FRAGMENTS_PATH = join(pardir, pardir, 'input', 'vesuvius-challenge-ink-detection', 'train')
+COOKIECUTTER_FRAGMENTS_PATH = join('data', 'raw', 'train')
+FRAGMENTS_PATH =  KAGGLE_FRAGMENTS_PATH if exists(KAGGLE_FRAGMENTS_PATH) else COOKIECUTTER_FRAGMENTS_PATH
 
-KAGGLE_MODELS_PATH = '../../working/'
-COOKIECUTTER_MODELS_PATH = 'models/'
-MODELS_PATH = COOKIECUTTER_MODELS_PATH if os.path.exists(COOKIECUTTER_MODELS_PATH) else KAGGLE_MODELS_PATH
+KAGGLE_WORKING_DIR = join(pardir, pardir, 'working')
+COOKIECUTTER_MODELS_DIR = 'models'
+MODELS_DIR = KAGGLE_WORKING_DIR if exists(KAGGLE_WORKING_DIR) else COOKIECUTTER_MODELS_DIR
+
+KAGGLE_TEST_FRAGMENTS = join(pardir, pardir, 'input', 'vesuvius-challenge-ink-detection', 'test')
+COOKIECUTTER_TEST_FRAGMENTS = join('data', 'raw', 'test')
+TEST_FRAGMENTS =  KAGGLE_TEST_FRAGMENTS if exists(KAGGLE_TEST_FRAGMENTS) else COOKIECUTTER_TEST_FRAGMENTS
+
+KAGGLE_WORKING_DIR = join(pardir, pardir, 'working')
+COOKIECUTTER_SUBMISSIONS_PATH = join('submissions')
+TEST_FRAGMENTS =  KAGGLE_WORKING_DIR if exists(KAGGLE_WORKING_DIR) else COOKIECUTTER_SUBMISSIONS_PATH
+
 TRAIN_FRAGMENTS = ['1']
 VAL_FRAGMENTS = ['3']
 
