@@ -1,3 +1,8 @@
+import os, sys
+
+parent = os.path.abspath(os.path.curdir)
+sys.path.insert(1, parent)
+
 import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
@@ -7,6 +12,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.models.losses import CombinedLoss
 from src.models.models import LightningVesuvius, UNet3d
 from src.data.make_dataset import CustomDataset, get_image_sizes
+from src.utils import get_device
 
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_PATH
 
@@ -20,10 +26,7 @@ def main():
     # empty the GPU cache
     torch.cuda.empty_cache()
     
-    # get the device
-    device = get_device()
-    
-    model = get_model(device)
+    model = get_model()
     
     train_dataloader = DataLoader(
         dataset=CustomDataset(TRAIN_FRAGMENTS),
@@ -48,23 +51,15 @@ def main():
         )
 
 
-def get_device():
-    if torch.cuda.is_available():
-        device = 'cuda'
-    elif torch.backends.mps.is_available():
-        device = 'mps'
-    else:
-        raise Exception("None accelerator available")
-
-    return device
-
-
-def get_model(device):
+def get_model():
     if wandb.config.model == 'UNet3d':
         num_block = wandb.config.num_block
         list_channels = [32 * i**2 for i in range(0, num_block + 1)]
         pytorch_model = UNet3d(list_channels)
-        pytorch_model.to(device)
+    
+    # get the device
+    device = get_device()
+    pytorch_model.to(device)
     
     learning_rate = wandb.config.learning_rate
     

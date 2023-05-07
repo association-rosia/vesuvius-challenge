@@ -11,9 +11,10 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 from tiler import Tiler
 
+from src.utils import get_device
 from constant import FRAGMENTS_PATH, TRAIN_FRAGMENTS, Z_START, Z_DIM, TILE_SIZE
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+DEVICE = get_device()
 
 
 def tile_fragment(fragment):
