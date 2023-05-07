@@ -1,6 +1,4 @@
 import os, sys
-# src_path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-# sys.path.append(src_path)
 
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
