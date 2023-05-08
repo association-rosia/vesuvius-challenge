@@ -9,7 +9,7 @@ train:
 ifdef dry
 	python src/models/models.py
 else
-	python src/models/train.py
+	python src/models/train_model.py
 endif
 
 optimisation:
