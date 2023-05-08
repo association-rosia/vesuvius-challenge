@@ -10,7 +10,8 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from src.models.losses import CombinedLoss
-from src.models.models import LightningVesuvius, UNet3d
+from src.models.lightning import LightningVesuvius
+from src.models.unet3d import UNet3d
 from src.data.make_dataset import CustomDataset, get_image_sizes
 from src.utils import get_device
 
@@ -87,7 +88,7 @@ def get_trainer():
         save_top_k=1,
         monitor="val_F05Score",
         mode="max",
-        dirpath= MODELS_PATH,
+        dirpath=MODELS_PATH,
         filename="{val_F05Score}-{wandb.name}-{wandb.id}",
     )
     
