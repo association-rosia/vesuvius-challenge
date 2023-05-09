@@ -12,7 +12,7 @@ else
 	python src/models/train_model.py
 endif
 
-optimisation:
+wandb:
 ifdef sweepid
 	wandb agent winged-bull/vesuvius-challenge-ink-detection/$(sweepid)
 endif
