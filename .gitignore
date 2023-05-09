@@ -2,7 +2,11 @@
 **/.DS_Store
 
 # Folders
-data/
+data/**
 **/.ipynb_checkpoints
 **/.idea
-asset
+**/__pycache__
+**/wandb
+
+# Models saved
+models/**
