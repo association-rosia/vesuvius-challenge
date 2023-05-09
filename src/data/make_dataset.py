@@ -19,7 +19,7 @@ DEVICE = get_device()
 
 def tile_fragment(fragment):
     fragment_path = os.path.join(FRAGMENTS_PATH, fragment)
-    
+
     slices_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
     slices = [cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE) / 255.0 for slice_path in slices_path]
     slices = np.stack(slices, axis=0)
@@ -34,6 +34,7 @@ def tile_fragment(fragment):
     slices_pad = np.pad(slices, padding)
 
     ink_path = os.path.join(fragment_path, 'inklabels.png')
+
     ink = cv2.imread(ink_path, cv2.IMREAD_GRAYSCALE) / 255.0
 
     ink_tiler = Tiler(data_shape=ink.shape,
