@@ -8,7 +8,7 @@ import glob
 import cv2
 import random
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
 
 import numpy as np
@@ -47,6 +47,7 @@ def tile_fragment(fragment):
     mask_tiler.recalculate(data_shape=new_shape)
     mask_pad = np.pad(mask, padding)
 
+    fragment_list = []
     image_list = []
     mask_list = []
     tile_bbox_list = []
@@ -54,17 +55,19 @@ def tile_fragment(fragment):
 
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
+            fragment_list.append(torch.from_numpy(np.asarray([np.float32(fragment)])))
             image_list.append(torch.from_numpy(image_tile[1].astype('float32')))
             mask_list.append(torch.from_numpy(mask_tile[1].astype('float32')))
             tile_bbox_list.append(
                 torch.from_numpy(np.array(image_tiler.get_tile_bbox(image_tile[0])).astype('float32'))
             )
 
+    fragment = torch.stack(fragment_list, dim=0)
     image = torch.stack(image_list, dim=0)
     mask = torch.stack(mask_list, dim=0)
     tile_bbox = torch.stack(tile_bbox_list, dim=0)
 
-    return image, mask, tile_bbox
+    return fragment, image, mask, tile_bbox
 
 
 class CustomDataset(Dataset):
@@ -75,11 +78,11 @@ class CustomDataset(Dataset):
         self.fragment = torch.Tensor()
 
         for fragment in fragments:
-            image, mask, tile_bbox = tile_fragment(fragment)
+            fragment, image, mask, tile_bbox = tile_fragment(fragment)
             self.image = torch.cat((self.image, image), dim=0)
             self.mask = torch.cat((self.mask, mask), dim=0)
             self.tile_bbox = torch.cat((self.tile_bbox, tile_bbox), dim=0)
-            self.fragment = torch.cat((self.fragment, torch.from_numpy(np.asarray([np.float32(fragment)]))), dim=0)
+            self.fragment = torch.cat((self.fragment, fragment), dim=0)
 
         self.augmentation = augmentation
         self.transforms = torch.nn.Sequential(T.RandomRotation(180),
@@ -113,4 +116,8 @@ class CustomDataset(Dataset):
 
 if __name__ == '__main__':
     train_dataset = CustomDataset(TRAIN_FRAGMENTS, augmentation=True)
-    fragment, image, mask, center = train_dataset[0]
+    train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
+
+    for indexes, inputs, masks, coords in train_dataloader:
+        print(indexes, inputs.shape, masks.shape, coords)
+        break
