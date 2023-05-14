@@ -1,0 +1,31 @@
+method: bayes
+
+metric:
+  name: val_best_F05Score
+  goal: maximize
+
+program: src/models/make_train.py
+
+parameters:
+
+  model:
+    distribution: constant
+    value: 'Unet3d'
+
+  epochs:
+    distribution: constant
+    value: 30
+
+  batch_size:
+    distribution: categorical
+    values: [16, 32, 64, 128]
+
+  scheduler_patience:
+    distribution: int_uniform
+    min: 9
+    max: 4
+  
+  learning_rate:
+    distribution: uniform
+    min: 0.0001
+    max: 0.001

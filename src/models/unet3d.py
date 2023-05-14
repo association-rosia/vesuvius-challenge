@@ -6,7 +6,7 @@ sys.path.insert(1, parent)
 import torch
 import torch.nn as nn
 
-from constant import Z_DIM
+from constant import TILE_SIZE
 
 class ConvBlock3d(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -100,8 +100,10 @@ class UNetDecoder3d(nn.Module):
 
 
 class UNet3d(nn.Module):
-    def __init__(self, list_channels, depth=64):
+    def __init__(self, list_channels):
         super().__init__()
+        
+        self.tile_size = TILE_SIZE
         
         # Architecture
         self.encoder = UNetEncoder3d(list_channels[:-1])
@@ -112,7 +114,7 @@ class UNet3d(nn.Module):
         
         self.outputs3d = nn.Conv3d(list_channels[1], list_channels[0], kernel_size=1, padding=0)
 
-        self.outputs2d = nn.MaxPool3d((depth, 1, 1))
+        self.outputs2d = nn.AdaptiveMaxPool3d((1, TILE_SIZE, TILE_SIZE))
         
     
     def forward(self, inputs):
@@ -131,10 +133,12 @@ class UNet3d(nn.Module):
         # Classifier 2D
         x = self.outputs2d(x)
         
-        return x
+        outputs = torch.squeeze(x, dim=(1, 2))
+        
+        return outputs
 
 
 if __name__ == "__main__":
-    model = UNet3d(list_channels=[1, 32, 64, 128], depth=Z_DIM)
+    model = UNet3d(list_channels=[1, 32, 64, 128])
     inputs = torch.randn(8, 1, 8, 256, 256)
     model(input)

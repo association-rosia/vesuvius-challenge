@@ -11,6 +11,7 @@ import pytorch_lightning as pl
 from src.models.losses import CombinedLoss
 from src.data.make_dataset import CustomDataset
 from src.models.metrics import F05Score
+from src.models.submission import Submission
 from src.models.unet3d import UNet3d
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
 
@@ -33,6 +34,7 @@ class LightningVesuvius(pl.LightningModule):
         self.scheduler_patience = scheduler_patience
         self.criterion = criterion
         self.metric = F05Score(val_image_sizes)
+        self.submission = Submission(val_image_sizes)
     
     
     def forward(self, inputs):
@@ -65,7 +67,19 @@ class LightningVesuvius(pl.LightningModule):
         return loss
     
     
-    def on_validation_end(self) -> None:
+    def test_step(self, batch, batch_idx):
+        inputs, masks, coords, indexes = batch
+        
+        # Forward pass
+        outputs = self(inputs)
+        
+        # Update the evaluation metric
+        self.submission.update(outputs, masks, coords, indexes)
+        
+        return None
+    
+    
+    def on_validation_epoch_end(self) -> None:
         # evaluate model on the validation dataset
         f05_score, sub_f05_score = self.metric.compute()
         self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
@@ -76,10 +90,17 @@ class LightningVesuvius(pl.LightningModule):
         return None
     
     
+    def on_test_epoch_end(self) -> None:
+        # evaluate model on the validation dataset
+        self.submission.compute()
+        
+        return None
+    
+    
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
         scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=self.scheduler_patience, verbose=True)
-        return [optimizer], [scheduler]
+        return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_loss"}
     
 
 if __name__ == '__main__':

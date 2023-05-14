@@ -60,7 +60,7 @@ def get_model():
     
     # get the device
     device = get_device()
-    pytorch_model.to(device)
+    pytorch_model#.to(device)
     
     learning_rate = wandb.config.learning_rate
     
@@ -77,7 +77,7 @@ def get_model():
         scheduler_patience,
         criterion, 
         val_image_sizes,
-        )
+        ).to(device)
     
     return lightning_model
 
