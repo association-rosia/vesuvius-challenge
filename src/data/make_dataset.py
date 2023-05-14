@@ -16,6 +16,8 @@ from torchvision import transforms as T
 import numpy as np
 from tiler import Tiler
 
+import gc
+
 from src.utils import get_device
 from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
                       TRAIN_SAVE_PATH, TEST_SAVE_PATH,
@@ -39,6 +41,10 @@ def tile_fragment(set_path, fragment, save_path, count):
     new_shape, padding = image_tiler.calculate_padding()
     image_tiler.recalculate(data_shape=new_shape)
     image_pad = np.pad(image, padding)
+
+    del image
+    gc.collect()
+
     mask_path = os.path.join(fragment_path, 'inklabels.png')
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE) / 255.0
     mask_tiler = Tiler(data_shape=mask.shape,
@@ -48,6 +54,10 @@ def tile_fragment(set_path, fragment, save_path, count):
     new_shape, padding = mask_tiler.calculate_padding()
     mask_tiler.recalculate(data_shape=new_shape)
     mask_pad = np.pad(mask, padding)
+
+    del mask
+    gc.collect()
+
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
     tiles = []
