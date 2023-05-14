@@ -8,6 +8,7 @@ import glob
 import cv2
 import random
 import torch
+import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
 
@@ -85,11 +86,12 @@ class CustomDataset(Dataset):
             self.fragment = torch.cat((self.fragment, fragment), dim=0)
 
         self.augmentation = augmentation
-        self.transforms = torch.nn.Sequential(T.RandomRotation(180),
-                                              T.RandomPerspective(),
-                                              T.ElasticTransform(alpha=500.0, sigma=10.0),
-                                              T.RandomHorizontalFlip(),
-                                              T.RandomVerticalFlip())
+        self.transforms = T.RandomApply(nn.ModuleList([T.RandomRotation(180),
+                                                       T.RandomPerspective(),
+                                                       T.ElasticTransform(alpha=500.0, sigma=10.0),
+                                                       T.RandomHorizontalFlip(),
+                                                       T.RandomVerticalFlip()
+                                                       ]), p=0.5)
 
     def __len__(self):
         return len(self.image)
