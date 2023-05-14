@@ -16,9 +16,13 @@ import numpy as np
 from tiler import Tiler
 
 from src.utils import get_device
-from constant import FRAGMENTS_PATH, TRAIN_FRAGMENTS, Z_START, Z_DIM, TILE_SIZE
+from constant import FRAGMENTS_PATH, TRAIN_FRAGMENTS, Z_START, Z_DIM, TILE_SIZE, TILE_SIZE_x2, TILE_SIZE_x3
 
 DEVICE = get_device()
+
+
+def get_multi_size_context(image, center, size):
+
 
 
 def tile_fragment(fragment):
@@ -51,13 +55,20 @@ def tile_fragment(fragment):
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
     for image_tile, mask_tile in tiles_zip:
+        bbox = image_tiler.get_tile_bbox(image_tile[0])
+        tile_bbox_list.append(torch.from_numpy(np.array(bbox).astype('float32')))
+        center = [(bbox[0][0] + bbox[1][0]) / 2, (bbox[0][1] + bbox[1][1]) / 2]
+
+        # image_tile_x2 = get_multi_size_context(image, center, TILE_SIZE_x2)
+        # mask_tile_x2 = get_multi_size_context(mask, center, TILE_SIZE_x2)
+
+        # image_tile_x3 = get_multi_size_context(image, center, TILE_SIZE_x3)
+        # mask_tile_x3 = get_multi_size_context(mask, center, TILE_SIZE_x3)
+
         if mask_tile[1].max() > 0:
             fragment_list.append(torch.from_numpy(np.asarray([np.float32(fragment)])))
             image_list.append(torch.from_numpy(image_tile[1].astype('float32')))
             mask_list.append(torch.from_numpy(mask_tile[1].astype('float32')))
-            tile_bbox_list.append(
-                torch.from_numpy(np.array(image_tiler.get_tile_bbox(image_tile[0])).astype('float32'))
-            )
 
     fragment = torch.stack(fragment_list, dim=0)
     image = torch.stack(image_list, dim=0)

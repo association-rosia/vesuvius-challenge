@@ -28,3 +28,7 @@ VAL_FRAGMENTS = ['3']
 Z_START = 27
 Z_DIM = 8
 TILE_SIZE = 256
+TILE_SIZE_x2 = TILE_SIZE * 2
+TILE_SIZE_x3 = TILE_SIZE * 3
+
+###############################
