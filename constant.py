@@ -6,6 +6,7 @@ from os import pardir
 KAGGLE_WORKING_DIR = join(pardir, pardir, 'working')
 KAGGLE_TRAIN_FRAGMENTS_PATH = join(pardir, pardir, 'input', 'vesuvius-challenge-ink-detection', 'train')
 KAGGLE_TEST_FRAGMENTS_PATH = join(pardir, pardir, 'input', 'vesuvius-challenge-ink-detection', 'test')
+KAGGLE_SAVE_PATH = join(pardir, pardir, 'working', 'data', 'raw')
 
 ################################
 
@@ -15,9 +16,13 @@ COOKIECUTTER_MODELS_DIR = 'models'
 COOKIECUTTER_SUBMISSIONS_DIR = 'submissions'
 COOKIECUTTER_TRAIN_FRAGMENTS_PATH = join('data', 'raw', 'train')
 COOKIECUTTER_TEST_FRAGMENTS_PATH = join('data', 'raw', 'test')
+COOKIECUTTER_TRAIN_SAVE_PATH = join('data', 'processed', 'train')
+COOKIECUTTER_TEST_SAVE_PATH = join('data', 'processed', 'test')
 
 PARENT_TRAIN_FRAGMENTS_PATH = join(pardir, pardir, 'data', 'raw', 'train')
 PARENT_TEST_FRAGMENTS_PATH = join(pardir, pardir, 'data', 'raw', 'test')
+PARENT_TRAIN_SAVE_PATH = join(pardir, pardir, 'data', 'processed', 'train')
+PARENT_TEST_SAVE_PATH = join(pardir, pardir, 'data', 'processed', 'test')
 
 ################################
 
@@ -41,6 +46,16 @@ TEST_FRAGMENTS_PATH = KAGGLE_TEST_FRAGMENTS_PATH if exists(KAGGLE_TEST_FRAGMENTS
     else COOKIECUTTER_TEST_FRAGMENTS_PATH if exists(COOKIECUTTER_TEST_FRAGMENTS_PATH) \
     else PARENT_TEST_FRAGMENTS_PATH if exists(PARENT_TEST_FRAGMENTS_PATH) \
     else NOTEBOOK_TEST_FRAGMENTS_PATH
+
+TRAIN_SAVE_PATH = KAGGLE_SAVE_PATH if exists(KAGGLE_WORKING_DIR) \
+    else COOKIECUTTER_TRAIN_SAVE_PATH if exists(COOKIECUTTER_TRAIN_FRAGMENTS_PATH) \
+    else PARENT_TRAIN_SAVE_PATH if exists(PARENT_TRAIN_FRAGMENTS_PATH) \
+    else ''
+
+TEST_SAVE_PATH = KAGGLE_SAVE_PATH if exists(KAGGLE_WORKING_DIR) \
+    else COOKIECUTTER_TEST_SAVE_PATH if exists(COOKIECUTTER_TEST_FRAGMENTS_PATH) \
+    else PARENT_TEST_SAVE_PATH if exists(PARENT_TEST_FRAGMENTS_PATH) \
+    else ''
 
 ###############################
 
