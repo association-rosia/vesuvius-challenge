@@ -1,4 +1,5 @@
 import os
+from os.path import join
 import sys
 
 parent = os.path.abspath(os.path.curdir)
@@ -15,24 +16,21 @@ from torchvision import transforms as T
 import numpy as np
 from tiler import Tiler
 
-import gc
-
 from src.utils import get_device
 from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
+                      TRAIN_SAVE_PATH, TEST_SAVE_PATH,
                       Z_START, Z_DIM, TILE_SIZE,
                       TRAIN_FRAGMENTS)
 
 DEVICE = get_device()
 
 
-def tile_fragment(set_path, fragment):
+def tile_fragment(set_path, fragment, save_path, count):
     fragment_path = os.path.join(set_path, fragment)
+
     image_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
     stack_list = [cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE) / 255.0 for slice_path in image_path]
     image = np.stack(stack_list, axis=0)
-
-    del stack_list
-    gc.collect()
 
     image_tiler = Tiler(data_shape=image.shape,
                         tile_shape=(Z_DIM, TILE_SIZE, TILE_SIZE),
@@ -51,41 +49,31 @@ def tile_fragment(set_path, fragment):
     new_shape, padding = mask_tiler.calculate_padding()
     mask_tiler.recalculate(data_shape=new_shape)
     mask_pad = np.pad(mask, padding)
-
-    fragment_list = []
-    image_list = []
-    mask_list = []
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
+    tiles = []
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
-            fragment_list.append(fragment)
-            image_list.append(torch.from_numpy(image_tile[1].astype('float32')))
-            mask_list.append(torch.from_numpy(mask_tile[1].astype('float32')))
+            os.makedirs(join(save_path, str(count)), exist_ok=True)
+            torch.save(torch.from_numpy(image_tile[1].astype('float32')), join(save_path, str(count), f'image.pt'))
+            torch.save(torch.from_numpy(mask_tile[1].astype('float32')), join(save_path, str(count), f'mask.pt'))
+            tiles.append({'tile': str(count), 'fragment': fragment})
+            print(count)
+            count += 1
 
-    fragment = fragment_list
-    image = torch.stack(image_list, dim=0)
-    mask = torch.stack(mask_list, dim=0)
-
-    del fragment_list, image_list, mask_list
-    gc.collect()
-
-    return fragment, image, mask
+    return tiles, count
 
 
 class CustomDataset(Dataset):
     def __init__(self, fragments, test, augmentation, multi_context):
-        self.image = torch.Tensor()
-        self.mask = torch.Tensor()
-        self.fragment = []
+        self.tiles = []
+        self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
+        self.save_path = TRAIN_SAVE_PATH if not test else TEST_SAVE_PATH
 
-        set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
-        # save_path = TRAIN_SAVE_PATH if not test else TEST_SAVE_PATH
+        count = 0
         for fragment in fragments:
-            fragment, image, mask = tile_fragment(set_path, fragment)
-            self.image = torch.cat((self.image, image), dim=0)
-            self.mask = torch.cat((self.mask, mask), dim=0)
-            self.fragment += fragment
+            tiles, count = tile_fragment(self.set_path, fragment, self.save_path, count)
+            self.tiles += tiles
 
         self.augmentation = augmentation
         self.transforms = T.RandomApply(nn.ModuleList([T.RandomRotation(180),
@@ -95,12 +83,14 @@ class CustomDataset(Dataset):
                                                        T.RandomVerticalFlip()]), p=0.5)
 
     def __len__(self):
-        return len(self.fragment)
+        return len(self.tiles)
 
     def __getitem__(self, idx):
-        fragment = self.fragment[idx]
-        image = torch.unsqueeze(self.image[idx], dim=0).to(DEVICE)
-        mask = torch.unsqueeze(self.mask[idx], dim=0).to(DEVICE)  # don't remove it Baptiste
+        tile = self.tiles[idx]['tile']
+        fragment = self.tiles[idx]['fragment']
+
+        image = torch.unsqueeze(torch.load(join(self.save_path, tile, f'image.pt'), map_location=DEVICE), dim=0)
+        mask = torch.unsqueeze(torch.load(join(self.save_path, tile, f'mask.pt'), map_location=DEVICE), dim=0)
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
@@ -110,6 +100,7 @@ class CustomDataset(Dataset):
             mask = self.transforms(mask)
 
         return fragment, image, mask
+
 
 #
 # def get_mask_sizes(fragments):
