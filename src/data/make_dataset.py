@@ -18,18 +18,18 @@ from tiler import Tiler
 
 from src.utils import get_device
 from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
+                      TRAIN_SAVE_PATH, TEST_SAVE_PATH,
                       Z_START, Z_DIM, TILE_SIZE,
                       TRAIN_FRAGMENTS)
 
 DEVICE = get_device()
 
 
-def tile_fragment(set_path, fragment):
+def tile_fragment(set_path, fragment, save_path, count):
     fragment_path = os.path.join(set_path, fragment)
 
     image_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
-    stack_list = [cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE) / 255.0 for slice_path in image_path]
-    image = np.stack(stack_list, axis=0)
+    image = np.stack([cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE) / 255.0 for slice_path in image_path], axis=0)
 
     image_tiler = Tiler(data_shape=image.shape,
                         tile_shape=(Z_DIM, TILE_SIZE, TILE_SIZE),
@@ -50,35 +50,29 @@ def tile_fragment(set_path, fragment):
     mask_pad = np.pad(mask, padding)
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
-    fragments = []
-    images = torch.Tensor().to(DEVICE)
-    masks = torch.Tensor().to(DEVICE)
-
+    tiles = []
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
-            fragments.append(fragment)
+            os.makedirs(join(save_path, str(count)), exist_ok=True)
+            torch.save(torch.from_numpy(image_tile[1].astype('float32')), join(save_path, str(count), f'image.pt'))
+            torch.save(torch.from_numpy(mask_tile[1].astype('float32')), join(save_path, str(count), f'mask.pt'))
+            tiles.append({'tile': str(count), 'fragment': fragment})
+            print(count)
+            count += 1
 
-            image = torch.from_numpy(image_tile[1].astype('float32')).to(DEVICE)
-            mask = torch.from_numpy(mask_tile[1].astype('float32')).to(DEVICE)
-
-            images = torch.cat((images, image), dim=0)
-            masks = torch.cat((masks, mask), dim=0)
-
-    return fragments, images, masks
+    return tiles, count
 
 
 class CustomDataset(Dataset):
     def __init__(self, fragments, test, augmentation, multi_context):
+        self.tiles = []
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
-        self.fragments = []
-        self.images = torch.Tensor().to(DEVICE)
-        self.masks = torch.Tensor().to(DEVICE)
+        self.save_path = TRAIN_SAVE_PATH if not test else TEST_SAVE_PATH
 
+        count = 0
         for fragment in fragments:
-            fragment, image, mask = tile_fragment(self.set_path, fragment)
-            self.fragments += fragment
-            self.images = torch.cat((self.images, image), dim=0)
-            self.masks = torch.cat((self.masks, mask), dim=0)
+            tiles, count = tile_fragment(self.set_path, fragment, self.save_path, count)
+            self.tiles += tiles
 
         self.augmentation = augmentation
         self.transforms = T.RandomApply(nn.ModuleList([T.RandomRotation(180),
@@ -88,12 +82,14 @@ class CustomDataset(Dataset):
                                                        T.RandomVerticalFlip()]), p=0.5)
 
     def __len__(self):
-        return len(self.fragments)
+        return len(self.tiles)
 
     def __getitem__(self, idx):
-        fragment = self.fragments[idx]
-        image = torch.unsqueeze(self.images[idx], dim=0)
-        mask = torch.unsqueeze(torch.unsqueeze(self.masks[idx], dim=0), dim=0)
+        tile = self.tiles[idx]['tile']
+        fragment = self.tiles[idx]['fragment']
+
+        image = torch.unsqueeze(torch.load(join(self.save_path, tile, f'image.pt'), map_location=DEVICE), dim=0)
+        mask = torch.unsqueeze(torch.load(join(self.save_path, tile, f'mask.pt'), map_location=DEVICE), dim=0)
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
