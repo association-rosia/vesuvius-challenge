@@ -1,8 +1,7 @@
 import torch.nn as nn
-from torchgeometry.losses.dice import DiceLoss
 
 class CombinedLoss(nn.Module):
-    def __init__(self, bce_weight=None, dice_weight=1):
+    def __init__(self, bce_weight=None, dice_weight=None):
         super(CombinedLoss, self).__init__()
 
         if not ((dice_weight is None) ^ (bce_weight is None)):
@@ -15,16 +14,22 @@ class CombinedLoss(nn.Module):
             self.dice_weight = 1 - bce_weight
             
         self.bce_loss = nn.BCELoss()
-        self.dice_loss = DiceLoss()
+        # TODO: Develop a DiceLoss Module
+        # self.dice_loss = DiceLoss()
         
     def forward(self, inputs, targets):
         # Compute binary cross-entropy (BCE) loss
         bce_loss = self.bce_loss(inputs, targets)
         
         # Compute Dice loss
-        dice_loss = self.dice_loss(inputs, targets)
+        # * Uncomment next line when the DiceLoss are implemented
+        # dice_loss = self.dice_loss(inputs, targets)
         
         # Combine the losses using weighted sum
-        combined_loss = self.alpha * bce_loss + self.beta * dice_loss
+        # * Uncomment next line when the DiceLoss are implemented
+        # combined_loss = self.alpha * bce_loss + self.beta * dice_loss
+        
+        # * Delete next line when the DiceLoss are implemented
+        combined_loss = bce_loss
         
         return combined_loss
