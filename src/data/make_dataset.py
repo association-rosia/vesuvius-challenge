@@ -21,7 +21,7 @@ from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
                       Z_START, Z_DIM, TILE_SIZE,
                       TRAIN_FRAGMENTS)
 
-DEVICE = get_device()
+DEVICE = 'cpu'  # get_device()
 
 
 def tile_fragment(set_path, fragment):
@@ -55,19 +55,25 @@ def tile_fragment(set_path, fragment):
 
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
+    fragment_list = []
     images = torch.ByteTensor().to(DEVICE)
     masks = torch.ByteTensor().to(DEVICE)
+    bboxes = torch.IntTensor()
 
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
             print(f'Concat tile number {image_tile[0]} to main tensor from fragment {fragment}...')
+            fragment_list.append(fragment)
             image = torch.unsqueeze(torch.from_numpy(image_tile[1]), dim=0).to(DEVICE)
             images = torch.cat((images, image), dim=0)
             mask = torch.unsqueeze(torch.from_numpy(mask_tile[1]), dim=0).to(DEVICE)
             masks = torch.cat((masks, mask), dim=0)
-            # bboxes =
 
-    return images, masks#, bboxes
+            bbox = image_tiler.get_tile_bbox(image_tile[0])
+            bbox_tensor = torch.IntTensor([bbox[0][0], bbox[0][1], bbox[1][0], bbox[1][1]])
+            bboxes = torch.cat((bboxes, torch.unsqueeze(bbox_tensor, dim=0)), dim=0)
+
+    return fragment_list, images, masks, bboxes
 
 
 class CustomDataset(Dataset):
@@ -78,13 +84,18 @@ class CustomDataset(Dataset):
         self.multi_context = multi_context
 
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
+
+        self.fragment_list = []
         self.images = torch.ByteTensor().to(DEVICE)
         self.masks = torch.ByteTensor().to(DEVICE)
+        self.bboxes = torch.IntTensor()
 
         for fragment in fragments:
-            images, masks = tile_fragment(self.set_path, fragment)
+            fragment_list, images, masks, bboxes = tile_fragment(self.set_path, fragment)
+            self.fragment_list += fragment_list
             self.images = torch.cat((self.images, images), dim=0)
             self.masks = torch.cat((self.masks, masks), dim=0)
+            self.bboxes = torch.cat((self.bboxes, bboxes), dim=0)
 
         self.transforms = T.RandomApply(nn.ModuleList([T.RandomRotation(180),
                                                        T.RandomPerspective(),
@@ -96,8 +107,10 @@ class CustomDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        image = (self.images[idx] / 255.0)
+        fragment = self.fragment_list[idx]
+        image = self.images[idx] / 255.0
         mask = torch.unsqueeze(self.masks[idx] / 255.0, dim=0)
+        bbox = self.bboxes[idx]  # [x0, y0, x1, y1]
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
@@ -106,7 +119,7 @@ class CustomDataset(Dataset):
             torch.manual_seed(seed)
             mask = torch.squeeze(self.transforms(mask))
 
-        return image, mask
+        return fragment, image, mask, bbox
 
 
 def get_image_shape(set_path, fragment):
@@ -121,6 +134,9 @@ if __name__ == '__main__':
     train_dataset = CustomDataset(TRAIN_FRAGMENTS, test=False, augmentation=True, multi_context=False)
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
 
-    for image, mask in train_dataloader:
-        print(image.shape, mask.shape)
+    for fragment, image, mask, bbox in train_dataloader:
+        print(fragment)
+        print(image.shape)
+        print(mask.shape)
+        print(bbox.shape)
         break
