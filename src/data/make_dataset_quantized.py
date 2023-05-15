@@ -66,14 +66,9 @@ def tile_fragment(set_path, fragment):
 
             float_mask = torch.from_numpy(mask_tile[1].astype('float16') / 255.0).to(DEVICE)
             # quantized_mask = torch.quantize_per_tensor(float_mask, 0.1, 10, torch.quint8).to(DEVICE)
-
-            print('testing')
-
             images = torch.cat((images, float_image), dim=0)
             masks = torch.cat((masks, float_mask), dim=0)
             # bboxes =
-
-    print(images, masks)
 
     return images, masks#, bboxes
 
@@ -82,10 +77,16 @@ class CustomDataset(Dataset):
     def __init__(self, fragments, test, augmentation, multi_context):
         self.tiles = []
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
+        self.images = torch.HalfTensor().to(DEVICE)
+        self.masks = torch.HalfTensor().to(DEVICE)
 
         for fragment in fragments:
-            tiles, count = tile_fragment(self.set_path, fragment)
-            self.tiles += tiles
+            images, masks = tile_fragment(self.set_path, fragment)
+            self.images = torch.cat((self.images, images), dim=0)
+            self.masks = torch.cat((self.masks, masks), dim=0)
+
+        self.images = torch.quantize_per_tensor(self.images, 0.1, 10, torch.quint8).to(DEVICE)
+        self.masks = torch.quantize_per_tensor(self.masks, 0.1, 10, torch.quint8).to(DEVICE)
 
         self.augmentation = augmentation
         self.transforms = T.RandomApply(nn.ModuleList([T.RandomRotation(180),
@@ -98,11 +99,8 @@ class CustomDataset(Dataset):
         return len(self.tiles)
 
     def __getitem__(self, idx):
-        tile = self.tiles[idx]['tile']
-        fragment = self.tiles[idx]['fragment']
-
-        image = torch.unsqueeze(torch.load(join(self.save_path, tile, f'image.pt'), map_location=DEVICE), dim=0)
-        mask = torch.unsqueeze(torch.load(join(self.save_path, tile, f'mask.pt'), map_location=DEVICE), dim=0)
+        image = self.images[idx]
+        mask = self.masks[idx]
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
@@ -111,7 +109,7 @@ class CustomDataset(Dataset):
             torch.manual_seed(seed)
             mask = self.transforms(mask)
 
-        return fragment, image, mask
+        return image, mask
 
 
 def get_image_shape(set_path, fragment):
@@ -126,6 +124,6 @@ if __name__ == '__main__':
     train_dataset = CustomDataset(TRAIN_FRAGMENTS, test=False, augmentation=True, multi_context=False)
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
 
-    for indexes, inputs, masks in train_dataloader:
-        print(indexes, inputs.shape, masks.shape)
+    for image, mask in train_dataloader:
+        print(image.shape, mask.shape)
         break
