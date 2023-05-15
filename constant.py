@@ -61,8 +61,8 @@ TEST_SAVE_PATH = KAGGLE_SAVE_PATH if exists(KAGGLE_WORKING_DIR) \
 
 ########## VARIABLES ##########
 
-TRAIN_FRAGMENTS = ['3']
-VAL_FRAGMENTS = ['1', '2']
+TRAIN_FRAGMENTS = ['1', '2', '3']
+VAL_FRAGMENTS = []
 TEST_FRAGMENTS = ['a', 'b', 'c']
 
 Z_START = 27
