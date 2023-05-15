@@ -78,8 +78,8 @@ class CustomDataset(Dataset):
         self.multi_context = multi_context
 
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
-        self.images = torch.ByteTensor()
-        self.masks = torch.ByteTensor()
+        self.images = torch.ByteTensor().to(DEVICE)
+        self.masks = torch.ByteTensor().to(DEVICE)
 
         for fragment in fragments:
             images, masks = tile_fragment(self.set_path, fragment)
@@ -97,7 +97,7 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         image = (self.images[idx] / 255.0)
-        mask = torch.unsqueeze(self.masks[idx] / 255.0, dim=0).to(DEVICE)
+        mask = torch.unsqueeze(self.masks[idx] / 255.0, dim=0)
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
