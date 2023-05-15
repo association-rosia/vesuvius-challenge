@@ -56,18 +56,15 @@ def tile_fragment(set_path, fragment):
 
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
-    images = torch.HalfTensor().to(DEVICE)
-    masks = torch.HalfTensor().to(DEVICE)
+    images = torch.ByteTensor()
+    masks = torch.ByteTensor()
 
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
-            float_image = torch.from_numpy(image_tile[1].astype('float16') / 255.0).to(DEVICE)
-            # quantized_image = torch.quantize_per_tensor(float_image, 0.1, 10, torch.quint8).to(DEVICE)
-
-            float_mask = torch.from_numpy(mask_tile[1].astype('float16') / 255.0).to(DEVICE)
-            # quantized_mask = torch.quantize_per_tensor(float_mask, 0.1, 10, torch.quint8).to(DEVICE)
-            images = torch.cat((images, float_image), dim=0)
-            masks = torch.cat((masks, float_mask), dim=0)
+            image = torch.unsqueeze(torch.from_numpy(image_tile[1]), dim=0)
+            images = torch.cat((images, image), dim=0)
+            mask = torch.unsqueeze(torch.from_numpy(mask_tile[1]), dim=0)
+            masks = torch.cat((masks, mask), dim=0)
             # bboxes =
 
     return images, masks#, bboxes
@@ -77,16 +74,13 @@ class CustomDataset(Dataset):
     def __init__(self, fragments, test, augmentation, multi_context):
         self.tiles = []
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
-        self.images = torch.HalfTensor().to(DEVICE)
-        self.masks = torch.HalfTensor().to(DEVICE)
+        self.images = torch.ByteTensor()
+        self.masks = torch.ByteTensor()
 
         for fragment in fragments:
             images, masks = tile_fragment(self.set_path, fragment)
             self.images = torch.cat((self.images, images), dim=0)
             self.masks = torch.cat((self.masks, masks), dim=0)
-
-        self.images = torch.quantize_per_tensor(self.images, 0.1, 10, torch.quint8).to(DEVICE)
-        self.masks = torch.quantize_per_tensor(self.masks, 0.1, 10, torch.quint8).to(DEVICE)
 
         self.augmentation = augmentation
         self.transforms = T.RandomApply(nn.ModuleList([T.RandomRotation(180),
@@ -99,8 +93,8 @@ class CustomDataset(Dataset):
         return len(self.tiles)
 
     def __getitem__(self, idx):
-        image = self.images[idx]
-        mask = self.masks[idx]
+        image = torch.quantize_per_tensor(self.images[idx] / 255.0, 0.1, 10, torch.quint8).to(DEVICE)
+        mask = torch.quantize_per_tensor(self.masks[idx] / 255.0, 0.1, 10, torch.quint8).to(DEVICE)
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
