@@ -16,6 +16,9 @@ from torchvision import transforms as T
 import numpy as np
 from tiler import Tiler
 
+import logging
+logging.basicConfig(level=print)
+
 from src.utils import get_device
 from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
                       TRAIN_SAVE_PATH, TEST_SAVE_PATH,
@@ -27,7 +30,6 @@ DEVICE = get_device()
 
 def tile_fragment(set_path, fragment):
     fragment_path = os.path.join(set_path, fragment)
-
     image_shape = get_image_shape(set_path, fragment)
     image = np.zeros(shape=(Z_DIM, image_shape[0], image_shape[1]), dtype=np.uint8)
     image_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
@@ -46,6 +48,7 @@ def tile_fragment(set_path, fragment):
 
     mask_path = os.path.join(fragment_path, 'inklabels.png')
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+
     mask_tiler = Tiler(data_shape=mask.shape,
                        tile_shape=(TILE_SIZE, TILE_SIZE),
                        overlap=0.5)
@@ -61,6 +64,7 @@ def tile_fragment(set_path, fragment):
 
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
+            print(f'Concat tile number {image_tile[0]} to main tensor from fragment {fragment}...')
             image = torch.unsqueeze(torch.from_numpy(image_tile[1]), dim=0)
             images = torch.cat((images, image), dim=0)
             mask = torch.unsqueeze(torch.from_numpy(mask_tile[1]), dim=0)
@@ -90,18 +94,18 @@ class CustomDataset(Dataset):
                                                        T.RandomVerticalFlip()]), p=0.5)
 
     def __len__(self):
-        return len(self.tiles)
+        return len(self.images)
 
     def __getitem__(self, idx):
-        image = torch.quantize_per_tensor(self.images[idx] / 255.0, 0.1, 10, torch.quint8).to(DEVICE)
-        mask = torch.quantize_per_tensor(self.masks[idx] / 255.0, 0.1, 10, torch.quint8).to(DEVICE)
+        image = (self.images[idx] / 255.0).to(DEVICE)
+        mask = torch.unsqueeze(self.masks[idx] / 255.0, dim=0).to(DEVICE)
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
             torch.manual_seed(seed)
             image = self.transforms(image)
             torch.manual_seed(seed)
-            mask = self.transforms(mask)
+            mask = torch.squeeze(self.transforms(mask))
 
         return image, mask
 
