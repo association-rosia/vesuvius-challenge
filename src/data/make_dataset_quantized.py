@@ -16,8 +16,6 @@ from torchvision import transforms as T
 import numpy as np
 from tiler import Tiler
 
-import gc
-
 from src.utils import get_device
 from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
                       TRAIN_SAVE_PATH, TEST_SAVE_PATH,
@@ -27,12 +25,15 @@ from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
 DEVICE = get_device()
 
 
-def tile_fragment(set_path, fragment, save_path, count):
+def tile_fragment(set_path, fragment):
     fragment_path = os.path.join(set_path, fragment)
 
+    image_shape = get_image_shape(set_path, fragment)
+    image = np.zeros(shape=(Z_DIM, image_shape[0], image_shape[1]), dtype=np.uint8)
     image_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
 
-    image = np.stack([cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE) / 255.0 for slice_path in image_path], axis=0)
+    for i, slice_path in enumerate(image_path):
+        image[i, ...] = cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE)
 
     image_tiler = Tiler(data_shape=image.shape,
                         tile_shape=(Z_DIM, TILE_SIZE, TILE_SIZE),
@@ -43,11 +44,8 @@ def tile_fragment(set_path, fragment, save_path, count):
     image_tiler.recalculate(data_shape=new_shape)
     image_pad = np.pad(image, padding)
 
-    del image
-    gc.collect()
-
     mask_path = os.path.join(fragment_path, 'inklabels.png')
-    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE) / 255.0
+    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     mask_tiler = Tiler(data_shape=mask.shape,
                        tile_shape=(TILE_SIZE, TILE_SIZE),
                        overlap=0.5)
@@ -56,33 +54,35 @@ def tile_fragment(set_path, fragment, save_path, count):
     mask_tiler.recalculate(data_shape=new_shape)
     mask_pad = np.pad(mask, padding)
 
-    del mask
-    gc.collect()
-
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
-    tiles = []
+    images = torch.ByteTensor().to(DEVICE)
+    masks = torch.ByteTensor().to(DEVICE)
+
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
-            os.makedirs(join(save_path, str(count)), exist_ok=True)
-            torch.save(torch.from_numpy(image_tile[1].astype('float32')), join(save_path, str(count), f'image.pt'))
-            torch.save(torch.from_numpy(mask_tile[1].astype('float32')), join(save_path, str(count), f'mask.pt'))
-            tiles.append({'tile': str(count), 'fragment': fragment})
-            print(count)
-            count += 1
+            float_image = torch.from_numpy(image_tile[1].astype('float32') / 255.0)
+            quantized_image = torch.quantize_per_tensor(float_image, 0.1, 10, torch.quint8).to(DEVICE)
 
-    return tiles, count
+            float_mask = torch.from_numpy(mask_tile[1].astype('float32') / 255.0)
+            quantized_mask = torch.quantize_per_tensor(float_mask, 0.1, 10, torch.quint8).to(DEVICE)
+
+            images = torch.cat((images, quantized_image), dim=0)
+            masks = torch.cat((masks, quantized_mask), dim=0)
+            # bboxes =
+
+    print(images, masks)
+
+    return images, masks#, bboxes
 
 
 class CustomDataset(Dataset):
     def __init__(self, fragments, test, augmentation, multi_context):
         self.tiles = []
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
-        self.save_path = TRAIN_SAVE_PATH if not test else TEST_SAVE_PATH
 
-        count = 0
         for fragment in fragments:
-            tiles, count = tile_fragment(self.set_path, fragment, self.save_path, count)
+            tiles, count = tile_fragment(self.set_path, fragment)
             self.tiles += tiles
 
         self.augmentation = augmentation
@@ -112,16 +112,12 @@ class CustomDataset(Dataset):
         return fragment, image, mask
 
 
-#
-# def get_mask_sizes(fragments):
-#     mask_sizes = {}
-#     for fragment in fragments:
-#         fragment_path = os.path.join(FRAGMENTS_PATH, fragment)
-#         mask_path = os.path.join(fragment_path, 'inklabels.png')
-#         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-#         mask_sizes[fragment] = mask.shape
-#
-#     return mask_sizes
+def get_image_shape(set_path, fragment):
+    fragment_path = os.path.join(set_path, fragment)
+    mask_path = os.path.join(fragment_path, 'inklabels.png')
+    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+
+    return mask.shape
 
 
 if __name__ == '__main__':
