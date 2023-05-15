@@ -56,19 +56,21 @@ def tile_fragment(set_path, fragment):
 
     tiles_zip = zip(image_tiler(image_pad), mask_tiler(mask_pad))
 
-    images = torch.ByteTensor().to(DEVICE)
-    masks = torch.ByteTensor().to(DEVICE)
+    images = torch.HalfTensor().to(DEVICE)
+    masks = torch.HalfTensor().to(DEVICE)
 
     for image_tile, mask_tile in tiles_zip:
         if mask_tile[1].max() > 0:
-            float_image = torch.from_numpy(image_tile[1].astype('float32') / 255.0)
-            quantized_image = torch.quantize_per_tensor(float_image, 0.1, 10, torch.quint8).to(DEVICE)
+            float_image = torch.from_numpy(image_tile[1].astype('float16') / 255.0).to(DEVICE)
+            # quantized_image = torch.quantize_per_tensor(float_image, 0.1, 10, torch.quint8).to(DEVICE)
 
-            float_mask = torch.from_numpy(mask_tile[1].astype('float32') / 255.0)
-            quantized_mask = torch.quantize_per_tensor(float_mask, 0.1, 10, torch.quint8).to(DEVICE)
+            float_mask = torch.from_numpy(mask_tile[1].astype('float16') / 255.0).to(DEVICE)
+            # quantized_mask = torch.quantize_per_tensor(float_mask, 0.1, 10, torch.quint8).to(DEVICE)
 
-            images = torch.cat((images, quantized_image), dim=0)
-            masks = torch.cat((masks, quantized_mask), dim=0)
+            print('testing')
+
+            images = torch.cat((images, float_image), dim=0)
+            masks = torch.cat((masks, float_mask), dim=0)
             # bboxes =
 
     print(images, masks)
