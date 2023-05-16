@@ -67,18 +67,6 @@ class LightningVesuvius(pl.LightningModule):
         return loss
     
     
-    def test_step(self, batch, batch_idx):
-        inputs, masks, coords, indexes = batch
-        
-        # Forward pass
-        outputs = self(inputs)
-        
-        # Update the evaluation metric
-        self.submission.update(outputs, masks, coords, indexes)
-        
-        return None
-    
-    
     def on_validation_epoch_end(self) -> None:
         # evaluate model on the validation dataset
         f05_score, sub_f05_score = self.metric.compute()
@@ -87,13 +75,6 @@ class LightningVesuvius(pl.LightningModule):
         self.log('val_best_F05Score', self.best_f05_score, prog_bar=True)
         self.log('val_F05Score', f05_score)
         self.log('val_SubF05Score', sub_f05_score)
-        return None
-    
-    
-    def on_test_epoch_end(self) -> None:
-        # evaluate model on the validation dataset
-        self.submission.compute()
-        
         return None
     
     
