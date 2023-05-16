@@ -33,10 +33,12 @@ def tile_fragment(set_path, fragment):
     for i, slice_path in enumerate(image_path):
         image[i, ...] = cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE)
 
-    image_tiler = Tiler(data_shape=image.shape,
-                        tile_shape=(Z_DIM, TILE_SIZE, TILE_SIZE),
-                        overlap=0.5,
-                        channel_dimension=0)
+    image_tiler = Tiler(
+        data_shape=image.shape,
+        tile_shape=(Z_DIM, TILE_SIZE, TILE_SIZE),
+        overlap=0.5,
+        channel_dimension=0,
+    )
 
     new_shape, padding = image_tiler.calculate_padding()
     image_tiler.recalculate(data_shape=new_shape)
@@ -45,9 +47,9 @@ def tile_fragment(set_path, fragment):
     mask_path = os.path.join(fragment_path, 'inklabels.png')
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
 
-    mask_tiler = Tiler(data_shape=mask.shape,
-                       tile_shape=(TILE_SIZE, TILE_SIZE),
-                       overlap=0.5)
+    mask_tiler = Tiler(
+        data_shape=mask.shape, tile_shape=(TILE_SIZE, TILE_SIZE), overlap=0.5
+    )
 
     new_shape, padding = mask_tiler.calculate_padding()
     mask_tiler.recalculate(data_shape=new_shape)
@@ -113,7 +115,7 @@ class CustomDataset(Dataset):
         bbox = self.bboxes[idx]  # [x0, y0, x1, y1]
 
         if self.augmentation:
-            seed = random.randint(0, 2 ** 32)
+            seed = random.randint(0, 2**32)
             torch.manual_seed(seed)
             image = self.transforms(image)
             torch.manual_seed(seed)
