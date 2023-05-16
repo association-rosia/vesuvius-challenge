@@ -21,7 +21,7 @@ from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
                       Z_START, Z_DIM, TILE_SIZE,
                       TRAIN_FRAGMENTS)
 
-DEVICE = 'cpu'  # get_device()
+DEVICE = get_device()
 
 
 def tile_fragment(set_path, fragment):
