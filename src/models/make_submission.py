@@ -14,7 +14,7 @@ from src.models.lightning import LightningVesuvius
 from src.utils import reconstruct_images, get_device
 from src.data.make_dataset import CustomDataset
 
-from constant import MODELS_DIR, TEST_FRAGMENTS
+from constant import MODELS_DIR, FRAGMENTS_TEST_FRAGMENTS
 
 MODELS_NAME = 'model_name.pt'
 MODEL_PATH = os.path.join(MODELS_DIR, MODELS_NAME)
@@ -30,7 +30,7 @@ def main():
     model.eval()
     
     test_dataloader = DataLoader(
-        dataset=CustomDataset(TEST_FRAGMENTS),
+        dataset=CustomDataset(FRAGMENTS_TEST_FRAGMENTS),
         batch_size=1,
         )
 
