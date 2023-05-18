@@ -81,11 +81,10 @@ def tile_fragment(set_path, fragment):
 
 
 class CustomDataset(Dataset):
-    def __init__(self, fragments, test, augmentation, multi_context):
+    def __init__(self, fragments, test, augmentation):
         self.fragments = fragments
         self.test = test
         self.augmentation = augmentation
-        self.multi_context = multi_context
 
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
 
@@ -135,7 +134,7 @@ def get_image_shape(set_path, fragment):
 
 
 if __name__ == '__main__':
-    train_dataset = CustomDataset(TRAIN_FRAGMENTS, test=False, augmentation=True, multi_context=False)
+    train_dataset = CustomDataset(TRAIN_FRAGMENTS, test=False, augmentation=True)
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
 
     for fragment, image, mask, bbox in train_dataloader:
