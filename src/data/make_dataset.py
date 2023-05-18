@@ -1,5 +1,4 @@
 import os
-from os.path import join
 import sys
 
 parent = os.path.abspath(os.path.curdir)
@@ -15,6 +14,7 @@ from torchvision import transforms as T
 
 import numpy as np
 from tiler import Tiler
+from tqdm import tqdm
 
 from src.utils import get_device
 from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
@@ -62,9 +62,9 @@ def tile_fragment(set_path, fragment):
     masks = torch.ByteTensor().to(DEVICE)
     bboxes = torch.IntTensor()
 
-    for image_tile, mask_tile in tiles_zip:
+    print(f'Extract {TILE_SIZE}x{TILE_SIZE} tiles from fragment {fragment}...')
+    for image_tile, mask_tile in tqdm(tiles_zip):
         if mask_tile[1].max() > 0:
-            print(f'Concat tile number {image_tile[0]} to main tensor from fragment {fragment}...')
             fragment_list.append(fragment)
             image = torch.unsqueeze(torch.from_numpy(image_tile[1]), dim=0).to(DEVICE)
             images = torch.cat((images, image), dim=0)
@@ -115,7 +115,7 @@ class CustomDataset(Dataset):
         bbox = self.bboxes[idx]  # [x0, y0, x1, y1]
 
         if self.augmentation:
-            seed = random.randint(0, 2**32)
+            seed = random.randint(0, 2 ** 32)
             torch.manual_seed(seed)
             image = self.transforms(image)
             torch.manual_seed(seed)
