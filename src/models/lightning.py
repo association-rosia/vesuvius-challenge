@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     train_dataloader = DataLoader(
         dataset=CustomDataset(
-            TRAIN_FRAGMENTS, test=False, augmentation=False, multi_context=False
+            TRAIN_FRAGMENTS, test=False, augmentation=False
         ),
         batch_size=8,
         shuffle=False,
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     val_dataloader = DataLoader(
         dataset=CustomDataset(
-            VAL_FRAGMENTS, test=False, augmentation=False, multi_context=False
+            VAL_FRAGMENTS, test=False, augmentation=False
         ),
         batch_size=8,
         shuffle=False,
