@@ -28,6 +28,8 @@ def tile_fragment(set_path, fragment):
     fragment_path = os.path.join(set_path, fragment)
     image_shape = get_image_shape(set_path, fragment)
     image = np.zeros(shape=(Z_DIM, image_shape[0], image_shape[1]), dtype=np.uint8)
+
+    print(f'\nLoad slice images from fragment {fragment}...')
     image_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
 
     for i, slice_path in enumerate(image_path):
