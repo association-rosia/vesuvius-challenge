@@ -31,7 +31,6 @@ def tile_fragment(set_path, fragment):
 
     print(f'\nLoad slice images from fragment {fragment}...')
     image_path = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))[Z_START:Z_START + Z_DIM]
-
     for i, slice_path in enumerate(image_path):
         image[i, ...] = cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE)
 
@@ -47,6 +46,7 @@ def tile_fragment(set_path, fragment):
     image_tiler.recalculate(data_shape=new_shape)
     image_pad = np.pad(image, padding)
 
+    print(f'\nLoad mask from fragment {fragment}...')
     mask_path = os.path.join(fragment_path, 'inklabels.png')
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
 
