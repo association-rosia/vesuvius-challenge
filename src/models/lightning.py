@@ -47,9 +47,9 @@ class LightningVesuvius(pl.LightningModule):
         outputs = self(inputs)
 
         loss = self.criterion(outputs, masks)
-        self.log("train/loss", loss, prog_bar=True, on_step=False, on_epoch=True)
+        self.log("train/loss", loss, on_step=False, on_epoch=True)
 
-        return loss
+        return {'train/loss': loss}
 
     def validation_step(self, batch, batch_idx):
         fragments_ids, inputs, masks, coords = batch
@@ -57,12 +57,12 @@ class LightningVesuvius(pl.LightningModule):
         # Forward pass
         outputs = self(inputs)
         loss = self.criterion(outputs, masks)
-        self.log("val/loss", loss, prog_bar=True, on_step=False, on_epoch=True)
+        self.log("val/loss", loss, on_step=False, on_epoch=True)
 
         # Update the evaluation metric
         self.metric.update(outputs, masks, coords, fragments_ids)
 
-        return loss
+        return {"val/loss", loss}
 
     def on_validation_epoch_end(self) -> None:
         # evaluate model on the validation dataset
@@ -116,10 +116,11 @@ if __name__ == "__main__":
     # use 3 batches of train, 2 batches of val and test
     trainer = pl.Trainer(
         limit_train_batches=3,
-        limit_val_batches=2,
-        max_epochs=1,
+        limit_val_batches=3,
+        max_epochs=2,
         callbacks=[checkpoint_callback],
         logger=logger,
+        log_every_n_steps=1
     )
 
     train_dataloader = DataLoader(
