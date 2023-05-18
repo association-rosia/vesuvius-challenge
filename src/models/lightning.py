@@ -120,7 +120,6 @@ if __name__ == "__main__":
         max_epochs=1,
         callbacks=[checkpoint_callback],
         logger=logger,
-        accelerator='cpu'
     )
 
     train_dataloader = DataLoader(
