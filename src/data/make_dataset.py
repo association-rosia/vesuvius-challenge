@@ -33,7 +33,7 @@ def tile_fragment(set_path, fragment):
     for i, slice_path in enumerate(image_path):
         image[i, ...] = cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE)
 
-    print(f'Build image tiler from fragment {fragment}...')
+    print(f'\nBuild image tiler from fragment {fragment}...')
     image_tiler = Tiler(
         data_shape=image.shape,
         tile_shape=(Z_DIM, TILE_SIZE, TILE_SIZE),
@@ -48,7 +48,7 @@ def tile_fragment(set_path, fragment):
     mask_path = os.path.join(fragment_path, 'inklabels.png')
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
 
-    print(f'Build mask tiler from fragment {fragment}...')
+    print(f'\nBuild mask tiler from fragment {fragment}...')
     mask_tiler = Tiler(
         data_shape=mask.shape, tile_shape=(TILE_SIZE, TILE_SIZE), overlap=0.5
     )
