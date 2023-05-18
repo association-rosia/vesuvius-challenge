@@ -120,7 +120,9 @@ if __name__ == "__main__":
         max_epochs=2,
         callbacks=[checkpoint_callback],
         logger=logger,
-        log_every_n_steps=1
+        log_every_n_steps=1,
+        accelerator='gpu',
+        devices='1'
     )
 
     train_dataloader = DataLoader(
