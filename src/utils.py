@@ -32,20 +32,11 @@ def reconstruct_images(
     }
 
     for i in range(sub_masks.shape[0]):
-        # x_center, y_center = center_coords[i, 0], center_coords[i, 1]
-
-        # # Calculate the start and end coordinates of the sub-mask
-        # x_start = x_center - TILE_SIZE // 2
-        # x_end = x_start + TILE_SIZE
-        # y_start = y_center - TILE_SIZE // 2
-        # y_end = y_start + TILE_SIZE
-
-        # Handle overlap by taking the mean of overlapping pixels
         reconstructed_images[fragment_ids[i]][
-            bboxs[i, 0, 0] : bboxs[i, 1, 0], bboxs[i, 0, 1] : bboxs[i, 1, 1]
+            bboxs[i, 0] : bboxs[i, 2], bboxs[i, 1] : bboxs[i, 3]
         ] += sub_masks[i, :, :]
         count_map[fragment_ids[i]][
-            bboxs[i, 0, 0] : bboxs[i, 1, 0], bboxs[i, 0, 1] : bboxs[i, 1, 1]
+            bboxs[i, 0] : bboxs[i, 2], bboxs[i, 1] : bboxs[i, 3]
         ] += 1
 
     # Divide by the count map to obtain the mean value
@@ -72,8 +63,8 @@ def get_dict_mask_shapes(list_fragment_ids, test: bool = False):
 
 def get_device():
     device = "cpu"
-    # if torch.cuda.is_available():
-    #     device = "cuda"
-    # elif torch.backends.mps.is_available():
-    #     device = "mps"
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.backends.mps.is_available():
+        device = "mps"
     return torch.device(device=device)
