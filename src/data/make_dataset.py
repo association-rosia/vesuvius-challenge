@@ -62,8 +62,8 @@ def tile_fragment(set_path, fragment):
     masks = torch.ByteTensor().to(DEVICE)
     bboxes = torch.IntTensor()
 
-    print(f'Extract {TILE_SIZE}x{TILE_SIZE} tiles from fragment {fragment}...')
-    for image_tile, mask_tile in tqdm(tiles_zip):
+    print(f'\nExtract {TILE_SIZE}x{TILE_SIZE} tiles from fragment {fragment}...')
+    for image_tile, mask_tile in tqdm(tiles_zip, total=image_tiler.n_tiles):
         if mask_tile[1].max() > 0:
             fragment_list.append(fragment)
             image = torch.unsqueeze(torch.from_numpy(image_tile[1]), dim=0).to(DEVICE)
