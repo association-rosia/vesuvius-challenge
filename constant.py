@@ -52,5 +52,5 @@ VAL_FRAGMENTS = ['3']
 TEST_FRAGMENTS = ['a', 'b', 'c']
 
 Z_START = 0
-Z_DIM = 16
+Z_DIM = 65
 TILE_SIZE = 256
