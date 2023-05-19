@@ -149,6 +149,7 @@ class UNet3d(nn.Module):
         # Classifier
         x = self.classifier(x)
         
+        # * For Torch 2.0: torch.squeeze(x, (1, 2))
         outputs = torch.squeeze(x, 2)
         outputs = torch.squeeze(outputs, 1)
 
