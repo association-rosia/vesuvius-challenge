@@ -13,14 +13,14 @@ from src.utils import reconstruct_images
 
 
 class F05Score(torchmetrics.Metric):
-    def __init__(self, mask_sizes, threshold):
+    def __init__(self, mask_shapes, threshold):
         super().__init__()
         self.add_state("predictions", default=[], dist_reduce_fx=None)
         self.add_state("targets", default=[], dist_reduce_fx=None)
         self.add_state("coords", default=[], dist_reduce_fx=None)
         self.add_state("indexes", default=[], dist_reduce_fx=None)
 
-        self.mask_sizes = mask_sizes
+        self.mask_shapes = mask_shapes
         self.f05score = BinaryFBetaScore(0.5, threshold)
 
     def update(self, predictions, targets, coords, indexes):
@@ -36,16 +36,16 @@ class F05Score(torchmetrics.Metric):
 
         # Reconstruct the original images from sub-masks
         reconstructed_predictions = reconstruct_images(
-            predictions, coords, self.indexes, self.mask_sizes
+            predictions, coords, self.indexes, self.mask_shapes
         )
         reconstructed_targets = reconstruct_images(
-            targets, coords, self.indexes, self.mask_sizes
+            targets, coords, self.indexes, self.mask_shapes
         )
 
         vector_predictions = torch.Tensor().to(device=self.device)
         vector_targets = torch.Tensor().to(device=self.device)
 
-        for fragment_id in self.mask_sizes.keys():
+        for fragment_id in self.mask_shapes.keys():
             view_predictions = reconstructed_predictions[fragment_id].view(-1)
             vector_predictions = torch.cat(
                 (view_predictions, vector_predictions), dim=0

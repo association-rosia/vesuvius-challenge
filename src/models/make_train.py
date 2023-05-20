@@ -89,7 +89,7 @@ def get_trainer():
         monitor="val_F05Score",
         mode="max",
         dirpath=MODELS_PATH,
-        filename="{val_F05Score}-{wandb.name}-{wandb.id}",
+        filename="{val_F05Score}-{wandb.name}-{wandb.id}"
     )
     
     lr_monitor = LearningRateMonitor(logging_interval='epoch')

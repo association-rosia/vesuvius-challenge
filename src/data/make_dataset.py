@@ -16,7 +16,7 @@ import numpy as np
 from tiler import Tiler
 from tqdm import tqdm
 
-from src.utils import get_device
+from src.utils import get_device, get_mask_shape
 from constant import (TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
                       Z_START, Z_DIM, TILE_SIZE,
                       TRAIN_FRAGMENTS)
@@ -26,7 +26,7 @@ DEVICE = get_device()
 
 def tile_fragment(set_path, fragment):
     fragment_path = os.path.join(set_path, fragment)
-    image_shape = get_image_shape(set_path, fragment)
+    image_shape = get_mask_shape(fragment_path)
     image = np.zeros(shape=(Z_DIM, image_shape[0], image_shape[1]), dtype=np.uint8)
 
     print(f'\nLoad slice images from fragment {fragment}...')
@@ -122,17 +122,11 @@ class CustomDataset(Dataset):
             torch.manual_seed(seed)
             image = self.transforms(image)
             torch.manual_seed(seed)
-            mask = torch.squeeze(self.transforms(mask))
+            mask = self.transforms(mask)
 
+        mask = torch.squeeze(mask)
+        
         return fragment, image, mask, bbox
-
-
-def get_image_shape(set_path, fragment):
-    fragment_path = os.path.join(set_path, fragment)
-    mask_path = os.path.join(fragment_path, 'inklabels.png')
-    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-
-    return mask.shape
 
 
 if __name__ == '__main__':
