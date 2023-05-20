@@ -41,7 +41,7 @@ class CustomDataset(Dataset):
             self.images = torch.ByteTensor()
             self.masks = torch.ByteTensor()
         else:
-            raise 'The loading parameter must be either before or during'
+            raise f'The loading parameter must be either before or during but instead got {loading}'
 
         self.bboxes = torch.IntTensor()
 
@@ -71,7 +71,7 @@ class CustomDataset(Dataset):
             image = self.images[idx].to(DEVICE) / 255.0
             mask = torch.unsqueeze(self.masks[idx].to(DEVICE) / 255.0, dim=0)
         else:
-            raise 'The loading parameter must be either before or during'
+            raise f'The loading parameter must be either before or during but instead got {self.loading}'
 
         bbox = self.bboxes[idx]  # [x0, y0, x1, y1]
 
@@ -131,7 +131,7 @@ def tile_fragment(set_path, fragment, loading):
         images = torch.ByteTensor()
         masks = torch.ByteTensor()
     else:
-        raise 'The loading parameter must be either before or during'
+        raise f'The loading parameter must be either before or during but instead got {loading}'
 
     bboxes = torch.IntTensor()
 
@@ -147,7 +147,7 @@ def tile_fragment(set_path, fragment, loading):
                 image = torch.unsqueeze(torch.from_numpy(image_tile[1]), dim=0)
                 mask = torch.unsqueeze(torch.from_numpy(mask_tile[1]), dim=0)
             else:
-                raise 'The loading parameter must be either before or during'
+                raise f'The loading parameter must be either before or during but instead got {loading}'
 
             images = torch.cat((images, image), dim=0)
             masks = torch.cat((masks, mask), dim=0)
@@ -172,8 +172,8 @@ if __name__ == '__main__':
 
     for fragment, image, mask, bbox in train_dataloader:
         print('\n')
-        print(fragment)
-        print(image)
-        print(mask)
-        print(bbox)
+        print(fragment.shape)
+        print(image.shape)
+        print(mask.shape)
+        print(bbox.shape)
         break
