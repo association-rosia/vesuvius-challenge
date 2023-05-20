@@ -5,7 +5,7 @@ from os import pardir
 KAGGLE_WORKING_DIR = '/kaggle/input/'
 KAGGLE_TRAIN_FRAGMENTS_PATH = '/kaggle/input/vesuvius-challenge-ink-detection/train/'
 KAGGLE_TEST_FRAGMENTS_PATH = '/kaggle/input/vesuvius-challenge-ink-detection/test/'
-KAGGLE_SAVE_PATH = '/kaggle/working/data/raw'
+KAGGLE_SAVE_PATH = '/kaggle/working/data/raw/'
 
 # COOKIECUTTER DIRECTORIES
 COOKIECUTTER_MODELS_DIR = 'models'
