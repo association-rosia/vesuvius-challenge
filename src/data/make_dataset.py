@@ -158,14 +158,6 @@ def tile_fragment(set_path, fragment, loading):
     return fragment_list, images, masks, bboxes
 
 
-def get_image_shape(set_path, fragment):
-    fragment_path = os.path.join(set_path, fragment)
-    mask_path = os.path.join(fragment_path, 'inklabels.png')
-    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-
-    return mask.shape
-
-
 if __name__ == '__main__':
     train_dataset = CustomDataset(TRAIN_FRAGMENTS, test=False, augmentation=True, loading='during')
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
