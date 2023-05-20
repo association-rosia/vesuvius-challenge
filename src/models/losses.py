@@ -1,5 +1,5 @@
-import torch.nn as nn
 import torch
+from torch import nn
 
 class CombinedLoss(nn.Module):
     def __init__(self, bce_weight=None, dice_weight=None):
@@ -17,9 +17,9 @@ class CombinedLoss(nn.Module):
         self.bce_loss = nn.BCELoss()
         self.dice_loss = DiceLoss()
         
-    def forward(self, inputs, targets):
+    def forward(self, predictions, targets):
         # Compute binary cross-entropy (BCE) loss
-        bce_loss = self.bce_loss(inputs, targets)
+        bce_loss = self.bce_loss(predictions, targets)
         
         # Compute Dice loss
         dice_loss = self.dice_loss(inputs, targets)
