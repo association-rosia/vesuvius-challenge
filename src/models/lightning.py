@@ -42,14 +42,14 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         _, inputs, masks, _ = batch
-        
+
         # Forward pass
         outputs = self(inputs)
 
         loss = self.criterion(outputs, masks)
         self.log("train/loss", loss, on_step=False, on_epoch=True)
 
-        return {'loss': loss}
+        return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         fragments_ids, inputs, masks, coords = batch
@@ -75,7 +75,7 @@ class LightningVesuvius(pl.LightningModule):
         self.log_dict(metrics, on_step=False, on_epoch=True)
 
         self.metric.reset()
-        
+
         return metrics
 
     def configure_optimizers(self):
@@ -123,13 +123,16 @@ if __name__ == "__main__":
         callbacks=[checkpoint_callback],
         logger=logger,
         log_every_n_steps=1,
-        accelerator='gpu',
-        devices='1'
+        accelerator="gpu",
+        devices="1",
     )
 
     train_dataloader = DataLoader(
         dataset=CustomDataset(
-            TRAIN_FRAGMENTS, test=False, augmentation=False
+            TRAIN_FRAGMENTS,
+            test=False,
+            augmentation=False,
+            loading="during",
         ),
         batch_size=8,
         shuffle=False,
@@ -138,7 +141,10 @@ if __name__ == "__main__":
 
     val_dataloader = DataLoader(
         dataset=CustomDataset(
-            VAL_FRAGMENTS, test=False, augmentation=False
+            VAL_FRAGMENTS,
+            test=False,
+            augmentation=False,
+            loading="during",
         ),
         batch_size=8,
         shuffle=False,

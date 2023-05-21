@@ -28,14 +28,24 @@ def main():
     model = get_model()
 
     train_dataloader = DataLoader(
-        dataset=CustomDataset(TRAIN_FRAGMENTS, augmentation=True, test=False),
+        dataset=CustomDataset(
+            TRAIN_FRAGMENTS,
+            augmentation=True,
+            test=False,
+            loading="during",
+        ),
         batch_size=wandb.config.batch_size,
         shuffle=True,
         drop_last=True,
     )
 
     val_dataloader = DataLoader(
-        dataset=CustomDataset(VAL_FRAGMENTS, augmentation=False, test=False),
+        dataset=CustomDataset(
+            VAL_FRAGMENTS,
+            augmentation=False,
+            test=False,
+            loading="during",
+        ),
         batch_size=wandb.config.batch_size,
         shuffle=False,
         drop_last=True,
@@ -84,7 +94,7 @@ def get_trainer():
 
     # init the trainer
     trainer = pl.Trainer(
-        accelerator='gpu',
+        accelerator="gpu",
         devices=1,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
