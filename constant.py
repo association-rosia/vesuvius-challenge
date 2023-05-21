@@ -1,11 +1,14 @@
-from os.path import join, exists
+from os.path import join, exists, abspath
 from os import pardir
+from os import sep
 
 # KAGGLE DIRECTORIES
-KAGGLE_WORKING_DIR = join(pardir, pardir, 'working')
-KAGGLE_TRAIN_FRAGMENTS_PATH = join(pardir, pardir, 'input', 'vesuvius-challenge-ink-detection', 'train')
-KAGGLE_TEST_FRAGMENTS_PATH = join(pardir, pardir, 'input', 'vesuvius-challenge-ink-detection', 'test')
-KAGGLE_SAVE_PATH = join(pardir, pardir, 'working', 'data', 'raw')
+KAGGLE_WORKING_DIR = join(abspath(sep), 'kaggle', 'working')
+KAGGLE_INPUT_DIR = join(abspath(sep), 'kaggle', 'input')
+
+KAGGLE_TRAIN_FRAGMENTS_PATH = join(KAGGLE_INPUT_DIR, 'vesuvius-challenge-ink-detection', 'train')
+KAGGLE_TEST_FRAGMENTS_PATH = join(KAGGLE_INPUT_DIR, 'vesuvius-challenge-ink-detection', 'test')
+KAGGLE_SAVE_PATH = join(KAGGLE_WORKING_DIR, 'data', 'raw')
 
 # COOKIECUTTER DIRECTORIES
 COOKIECUTTER_MODELS_DIR = 'models'
