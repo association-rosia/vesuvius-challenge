@@ -4,7 +4,7 @@ metric:
   name: val_best_F05Score
   goal: maximize
 
-program: src/models/make_train.py
+program: src/models/make_train.py --wandb_agent True
 
 parameters:
 
