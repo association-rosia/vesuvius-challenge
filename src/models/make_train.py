@@ -14,12 +14,13 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from src.data.make_dataset import CustomDataset
 from src.models.lightning import LightningVesuvius
-from src.utils import get_dict_mask_shapes
+from src.utils import get_dict_mask_shapes, get_device
 
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE
 
 import wandb
 
+DEVICE = get_device()
 
 def main():
     # empty the GPU cache
@@ -76,7 +77,7 @@ def get_model():
         bce_weight=wandb.config.bce_weight,
         f05score_threshold=wandb.config.f05score_threshold,
         val_mask_shapes=get_dict_mask_shapes(VAL_FRAGMENTS),
-    )  # .to(device)
+    ).to(DEVICE)
 
     return lightning_model
 
@@ -105,19 +106,8 @@ def get_trainer():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Make Train")
-    parser.add_argument(
-        "-wandb_agent",
-        default=False,
-        nargs="?",
-        metavar="bool",
-        type=lambda x: bool(eval(x)),
-        required=False,
-        help="A Boolean set to True if it's WandB agent False or not defined otherwise. Default set to False.",
-    )
-    args = parser.parse_args()
-
-    if not args.wandb_agent:
+    
+    if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         wandb.init(
             project="vesuvius-challenge-ink-detection",
             entity="winged-bull",
