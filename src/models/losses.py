@@ -22,7 +22,7 @@ class CombinedLoss(nn.Module):
         bce_loss = self.bce_loss(predictions, targets)
         
         # Compute Dice loss
-        dice_loss = self.dice_loss(inputs, targets)
+        dice_loss = self.dice_loss(predictions, targets)
         
         # Combine the losses using weighted sum
         combined_loss = self.bce_weight * bce_loss + self.dice_weight * dice_loss
