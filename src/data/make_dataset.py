@@ -163,8 +163,9 @@ def tile_fragment(self, fragment):
     return fragment_list, images, masks, bboxes, bbox_list
 
 
-def read_bboxes(save_path, tile_size):
-    bboxes_path = os.path.join(save_path, tile_size, 'bboxes.json')
+def read_bboxes(path, tile_size):
+    bboxes_path = os.path.join(path, tile_size, 'bboxes.json')
+    print(bboxes_path)
     with open(bboxes_path) as f:
         bbox_list = json.load(f)
 
