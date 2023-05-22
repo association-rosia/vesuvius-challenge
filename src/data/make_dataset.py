@@ -63,9 +63,10 @@ class VesuviusDataset(Dataset):
 
             if self.save:
                 save_bboxes(self.save_path, self.tile_size, self.bbox_list)
-        else:
+
+        elif self.read:
             for fragment in self.fragments:
-                save_folder = os.path.join(self.save_path, self.tile_size, str(fragment))
+                save_folder = os.path.join(self.read_path, self.tile_size, str(fragment))
                 self.indexes += [os.path.join(str(fragment), d)
                                  for d in os.listdir(save_folder)
                                  if os.path.isdir(os.path.join(save_folder, d))]
