@@ -93,7 +93,7 @@ class LightningVesuvius(pl.LightningModule):
 if __name__ == "__main__":
     from pytorch_lightning.loggers import WandbLogger
     from pytorch_lightning.callbacks import ModelCheckpoint
-    from src.data.make_dataset import CustomDataset
+    from src.data.make_dataset import VesuviusDataset
     from torch.utils.data import DataLoader
     from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS
     from src.utils import get_dict_mask_shapes
@@ -128,11 +128,11 @@ if __name__ == "__main__":
     )
 
     train_dataloader = DataLoader(
-        dataset=CustomDataset(
+        dataset=VesuviusDataset(
             TRAIN_FRAGMENTS,
             test=False,
             augmentation=False,
-            loading="during",
+            on_ram="during",
         ),
         batch_size=8,
         shuffle=False,
@@ -140,11 +140,11 @@ if __name__ == "__main__":
     )
 
     val_dataloader = DataLoader(
-        dataset=CustomDataset(
+        dataset=VesuviusDataset(
             VAL_FRAGMENTS,
             test=False,
             augmentation=False,
-            loading="during",
+            on_ram="during",
         ),
         batch_size=8,
         shuffle=False,

@@ -5,11 +5,10 @@ sys.path.insert(0, os.pardir)
 from typing import List, Dict
 
 import torch
-import numpy as np
 
 import cv2
 
-from constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
+from constant import TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
 
 
 def reconstruct_images(
