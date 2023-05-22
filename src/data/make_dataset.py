@@ -20,7 +20,7 @@ from PIL import Image
 import json
 
 from src.utils import get_device, get_mask_shape
-from constant import (TRAIN_SAVE_PATH, TEST_SAVE_PATH,
+from constant import (TRAIN_SAVE_PATH, TEST_SAVE_PATH, TRAIN_READ_PATH, TEST_READ_PATH,
                       TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH,
                       Z_START, Z_DIM, TILE_SIZE,
                       TRAIN_FRAGMENTS)
@@ -39,6 +39,7 @@ class VesuviusDataset(Dataset):
 
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
         self.save_path = TRAIN_SAVE_PATH if not test else TEST_SAVE_PATH
+        self.read_path = TRAIN_READ_PATH if not test else TEST_READ_PATH
         self.tile_size = f'{TILE_SIZE}x{TILE_SIZE}'
         self.fragment_list = []
         self.bbox_list = {}
@@ -91,9 +92,9 @@ class VesuviusDataset(Dataset):
     def __getitem__(self, idx):
         if self.read:
             fragment = self.indexes[idx].split('/')[0]
-            image_path = os.path.join(self.save_path, self.tile_size, self.indexes[idx], '*.png')
+            image_path = os.path.join(self.read_path, self.tile_size, self.indexes[idx], '*.png')
             image = torch.ByteTensor(build_3d_image(image_path, shape=(Z_DIM, TILE_SIZE, TILE_SIZE)))
-            mask_path = os.path.join(self.save_path, self.tile_size, f'{self.indexes[idx]}.png')
+            mask_path = os.path.join(self.read_path, self.tile_size, f'{self.indexes[idx]}.png')
             mask = torch.ByteTensor(cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE))
             bbox = torch.IntTensor(self.bbox_list[self.indexes[idx]])
         else:
