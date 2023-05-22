@@ -11,6 +11,9 @@ from src.models.losses import CombinedLoss
 from src.models.metrics import F05Score
 from src.models.unet3d import UNet3d
 
+from src.utils import get_device
+DEVICE = get_device()
+
 
 class LightningVesuvius(pl.LightningModule):
     def __init__(
@@ -42,6 +45,8 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         _, inputs, masks, _ = batch
+        inputs = inputs.to(DEVICE)
+        masks = masks.to(DEVICE)
 
         # Forward pass
         outputs = self(inputs)
@@ -53,6 +58,8 @@ class LightningVesuvius(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         fragments_ids, inputs, masks, coords = batch
+        inputs = inputs.to(DEVICE)
+        masks = masks.to(DEVICE)
 
         # Forward pass
         outputs = self(inputs)
@@ -93,7 +100,7 @@ class LightningVesuvius(pl.LightningModule):
 if __name__ == "__main__":
     from pytorch_lightning.loggers import WandbLogger
     from pytorch_lightning.callbacks import ModelCheckpoint
-    from src.data.make_dataset import CustomDataset
+    from src.data.make_dataset import VesuviusDataset
     from torch.utils.data import DataLoader
     from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS
     from src.utils import get_dict_mask_shapes
@@ -128,11 +135,13 @@ if __name__ == "__main__":
     )
 
     train_dataloader = DataLoader(
-        dataset=CustomDataset(
+        dataset=VesuviusDataset(
             TRAIN_FRAGMENTS,
             test=False,
-            augmentation=False,
-            loading="during",
+            augmentation=True,
+            on_ram='after',
+            save=False,
+            read=True
         ),
         batch_size=8,
         shuffle=False,
@@ -140,11 +149,13 @@ if __name__ == "__main__":
     )
 
     val_dataloader = DataLoader(
-        dataset=CustomDataset(
+        dataset=VesuviusDataset(
             VAL_FRAGMENTS,
             test=False,
-            augmentation=False,
-            loading="during",
+            augmentation=True,
+            on_ram='after',
+            save=False,
+            read=True
         ),
         batch_size=8,
         shuffle=False,

@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 from src.models.lightning import LightningVesuvius
 from src.utils import reconstruct_images, get_device
-from src.data.make_dataset import CustomDataset
+from src.data.make_dataset import VesuviusDataset
 
 from constant import MODELS_DIR, FRAGMENTS_TEST_FRAGMENTS
 
@@ -30,7 +30,7 @@ def main():
     model.eval()
     
     test_dataloader = DataLoader(
-        dataset=CustomDataset(FRAGMENTS_TEST_FRAGMENTS),
+        dataset=VesuviusDataset(FRAGMENTS_TEST_FRAGMENTS),
         batch_size=1,
         )
 

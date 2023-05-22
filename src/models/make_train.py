@@ -12,7 +12,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.data.make_dataset import CustomDataset
+from src.data.make_dataset import VesuviusDataset
 from src.models.lightning import LightningVesuvius
 from src.utils import get_dict_mask_shapes, get_device
 
@@ -29,11 +29,13 @@ def main():
     model = get_model()
 
     train_dataloader = DataLoader(
-        dataset=CustomDataset(
+        dataset=VesuviusDataset(
             TRAIN_FRAGMENTS,
-            augmentation=True,
             test=False,
-            loading="before",
+            augmentation=True,
+            on_ram='after',
+            save=False,
+            read=True
         ),
         batch_size=wandb.config.batch_size,
         shuffle=True,
@@ -41,11 +43,13 @@ def main():
     )
 
     val_dataloader = DataLoader(
-        dataset=CustomDataset(
+        dataset=VesuviusDataset(
             VAL_FRAGMENTS,
-            augmentation=False,
             test=False,
-            loading="before",
+            augmentation=True,
+            on_ram='after',
+            save=False,
+            read=True
         ),
         batch_size=wandb.config.batch_size,
         shuffle=False,
@@ -65,7 +69,7 @@ def get_model():
     if wandb.config.model_name == "UNet3d":
         num_block = wandb.config.num_block
         model_parameters = dict(
-            list_channels=[1] + [32 * 2 ** (i) for i in range(num_block)],
+            list_channels=[1] + [32 * 2 ** i for i in range(num_block)],
             inputs_size=TILE_SIZE,
         )
 

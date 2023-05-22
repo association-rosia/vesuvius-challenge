@@ -16,15 +16,10 @@ class ConvBlock3d(nn.Module):
 
     def forward(self, inputs):
         x = self.conv1(inputs)
-
         x = self.bn1(x)
-
         x = self.relu(x)
-
         x = self.conv2(x)
-
         x = self.bn2(x)
-
         x = self.relu(x)
 
         return x
@@ -127,11 +122,8 @@ class UNet3d(nn.Module):
 
         # Architecture
         self.encoder = UNetEncoder3d(list_channels[:-1])
-
         self.bottleneck = ConvBlock3d(*list_channels[-2:])
-
         self.decoder = UNetDecoder3d(list_channels[1:])
-
         self.classifier = ClassifierHead(list_channels[1], list_channels[0], inputs_size)
 
     def forward(self, inputs):
@@ -148,7 +140,7 @@ class UNet3d(nn.Module):
 
         # Classifier
         x = self.classifier(x)
-        
+
         # * For Torch 2.0: torch.squeeze(x, (1, 2))
         outputs = torch.squeeze(x, 2)
         outputs = torch.squeeze(outputs, 1)
@@ -157,7 +149,8 @@ class UNet3d(nn.Module):
 
 
 if __name__ == "__main__":
-    import os, sys
+    import os
+    import sys
 
     parent = os.path.abspath(os.path.curdir)
     sys.path.insert(1, parent)
