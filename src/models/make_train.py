@@ -20,6 +20,7 @@ from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE
 
 import wandb
 
+
 def main():
     # empty the GPU cache
     torch.cuda.empty_cache()
@@ -108,7 +109,7 @@ def get_trainer():
 
 
 if __name__ == "__main__":
-    
+
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         wandb.init(
             project="vesuvius-challenge-ink-detection",
