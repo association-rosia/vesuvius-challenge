@@ -14,13 +14,11 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from src.data.make_dataset import VesuviusDataset
 from src.models.lightning import LightningVesuvius
-from src.utils import get_dict_mask_shapes, get_device
+from src.utils import get_dict_mask_shapes
 
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE
 
 import wandb
-
-DEVICE = get_device()
 
 def main():
     # empty the GPU cache
@@ -81,7 +79,7 @@ def get_model():
         bce_weight=wandb.config.bce_weight,
         f05score_threshold=wandb.config.f05score_threshold,
         val_mask_shapes=get_dict_mask_shapes(VAL_FRAGMENTS),
-    ).to(DEVICE)
+    )
 
     return lightning_model
 
