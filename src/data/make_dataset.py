@@ -164,7 +164,6 @@ def tile_fragment(self, fragment):
 
 def read_bboxes(path, tile_size):
     bboxes_path = os.path.join(path, tile_size, 'bboxes.json')
-    print(bboxes_path)
     with open(bboxes_path) as f:
         bbox_list = json.load(f)
 
