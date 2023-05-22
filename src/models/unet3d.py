@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from typing import List
 
 
 class ConvBlock3d(nn.Module):
@@ -9,18 +10,20 @@ class ConvBlock3d(nn.Module):
         self.conv1 = nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm3d(out_channels)
 
-        self.conv2 = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm3d(out_channels)
+        # * Uncomment if we get more gpu memory in the future
+        # self.conv2 = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1)
+        # self.bn2 = nn.BatchNorm3d(out_channels)
 
         self.relu = nn.ReLU()
 
-    def forward(self, inputs):
-        x = self.conv1(inputs)
+    def forward(self, x):
+        x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
+        # ! Do not forget to also uncomment this.
+        # x = self.conv2(x)
+        # x = self.bn2(x)
+        # x = self.relu(x)
 
         return x
 
@@ -32,28 +35,26 @@ class EncoderBlock3d(nn.Module):
         self.conv = ConvBlock3d(in_channels, out_channels)
         self.pool = nn.MaxPool3d((2, 2, 2))
 
-    def forward(self, inputs):
-        x = self.conv(inputs)
+    def forward(self, x):
+        x = self.conv(x)
         p = self.pool(x)
         return x, p
 
 
 class UNetEncoder3d(nn.Module):
-    def __init__(self, list_channels):
+    def __init__(self, list_channels: List):
         super().__init__()
 
-        self.nb_block = len(list_channels) - 1
-        for i in range(self.nb_block):
-            self.__setattr__(
-                f"block_{i}", EncoderBlock3d(list_channels[i], list_channels[i + 1])
-            )
-
-    def forward(self, inputs):
+        self.encoderblocks = nn.ModuleList([])
+        for in_channels, out_channels in zip(list_channels[:-1], list_channels[1:]):
+            self.encoderblocks.append(EncoderBlock3d(in_channels, out_channels))
+            
+    def forward(self, x):
         list_skips = []
-        x = inputs
-        for i in range(self.nb_block):
-            outputs, x = self.__getattr__(f"block_{i}")(x)
-            list_skips.append(outputs)
+        
+        for encoderblock in self.encoderblocks:
+            skip, x = encoderblock(x)
+            list_skips.append(skip)
 
         return x, list_skips
 
@@ -67,8 +68,8 @@ class DecoderBlock3d(nn.Module):
         )
         self.conv = ConvBlock3d(out_channels + out_channels, out_channels)
 
-    def forward(self, inputs, skip):
-        x = self.up(inputs)
+    def forward(self, x, skip):
+        x = self.up(x)
         x = torch.cat([x, skip], dim=1)
         x = self.conv(x)
 
@@ -76,25 +77,25 @@ class DecoderBlock3d(nn.Module):
 
 
 class UNetDecoder3d(nn.Module):
-    def __init__(self, list_channels):
+    def __init__(self, list_channels: List):
         super().__init__()
+        
+        list_channels.reverse()
+        
+        self.decoderblocks = nn.ModuleList([])
+        for in_channels, out_channels in zip(list_channels[:-1], list_channels[1:]):
+            self.decoderblocks.append(DecoderBlock3d(in_channels, out_channels))
 
-        self.nb_block = len(list_channels) - 1
-        for i in range(self.nb_block, -1, -1):
-            self.__setattr__(
-                f"block_{i - 1}", DecoderBlock3d(list_channels[i], list_channels[i - 1])
-            )
-
-    def forward(self, inputs, list_skips):
-        x = inputs
-
-        for i in range(self.nb_block - 1, -1, -1):
-            x = self.__getattr__(f"block_{i}")(x, list_skips[i])
+    def forward(self, x, list_skips: List):
+        list_skips.reverse()
+        
+        for decoderblock, skip in zip(self.decoderblocks, list_skips):
+            x = decoderblock(x, skip)
 
         return x
 
 
-class ClassifierHead(nn.Module):
+class SegmenterHead(nn.Module):
     def __init__(self, in_channels, out_channels, inputs_size) -> None:
         super().__init__()
 
@@ -104,9 +105,9 @@ class ClassifierHead(nn.Module):
 
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, inputs):
+    def forward(self, x):
         # 3D outputs
-        x = self.outputs3d(inputs)
+        x = self.outputs3d(x)
 
         # 2D outputs
         x = self.outputs2d(x)
@@ -124,10 +125,12 @@ class UNet3d(nn.Module):
         self.encoder = UNetEncoder3d(list_channels[:-1])
         self.bottleneck = ConvBlock3d(*list_channels[-2:])
         self.decoder = UNetDecoder3d(list_channels[1:])
-        self.classifier = ClassifierHead(list_channels[1], list_channels[0], inputs_size)
+        self.segmenter = SegmenterHead(
+            list_channels[1], list_channels[0], inputs_size
+        )
 
-    def forward(self, inputs):
-        x = torch.unsqueeze(inputs, 1)
+    def forward(self, x):
+        x = torch.unsqueeze(x, 1)
 
         # Encoder
         x, list_skips = self.encoder(x)
@@ -138,14 +141,14 @@ class UNet3d(nn.Module):
         # Decoder
         x = self.decoder(x, list_skips)
 
-        # Classifier
-        x = self.classifier(x)
+        # Segmenter Head
+        x = self.segmenter(x)
 
         # * For Torch 2.0: torch.squeeze(x, (1, 2))
-        outputs = torch.squeeze(x, 2)
-        outputs = torch.squeeze(outputs, 1)
+        x = torch.squeeze(x, 2)
+        x = torch.squeeze(x, 1)
 
-        return outputs
+        return x
 
 
 if __name__ == "__main__":
