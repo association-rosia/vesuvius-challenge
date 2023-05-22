@@ -1,10 +1,6 @@
 import torch
 import torch.nn as nn
 
-from src.utils import get_device
-
-DEVICE = get_device()
-
 
 class ConvBlock3d(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -131,7 +127,7 @@ class UNet3d(nn.Module):
         self.classifier = ClassifierHead(list_channels[1], list_channels[0], inputs_size)
 
     def forward(self, inputs):
-        x = torch.unsqueeze(inputs, 1).to(DEVICE)
+        x = torch.unsqueeze(inputs, 1)
 
         # Encoder
         x, list_skips = self.encoder(x)

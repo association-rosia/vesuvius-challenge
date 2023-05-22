@@ -1,14 +1,10 @@
 import os, sys
-
 sys.path.insert(0, os.pardir)
 
 from typing import List, Dict
-
 import torch
 
-import cv2
-
-from constant import TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
+from constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
 
 
 def reconstruct_images(
@@ -46,18 +42,12 @@ def reconstruct_images(
     return reconstructed_images
 
 
-def get_mask_shape(fragment_dir):
-    mask_path = os.path.join(fragment_dir, "inklabels.png")
-    return cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE).shape
+def get_mask_shape():
+    return TILE_SIZE, TILE_SIZE
 
 
-def get_dict_mask_shapes(list_fragment_ids, test: bool = False):
-    set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
-
-    return {
-        fragment_id: get_mask_shape(os.path.join(set_path, fragment_id))
-        for fragment_id in list_fragment_ids
-    }
+def get_dict_mask_shapes(list_fragment_ids):
+    return {fragment_id: get_mask_shape() for fragment_id in list_fragment_ids}
 
 
 def get_device():
