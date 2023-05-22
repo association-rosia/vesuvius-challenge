@@ -73,7 +73,7 @@ class VesuviusDataset(Dataset):
 
                 self.indexes = sorted(self.indexes)
 
-        self.bbox_list = read_bboxes(self.save_path, self.tile_size)
+        self.bbox_list = read_bboxes(self.read_path, self.tile_size)
 
         self.transforms = T.RandomApply(nn.ModuleList([T.RandomRotation(180),
                                                        T.RandomPerspective(),
