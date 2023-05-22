@@ -258,7 +258,6 @@ if __name__ == '__main__':
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
 
     for fragment, image, mask, bbox in train_dataloader:
-        print('\n')
         print(fragment)
         print(image.shape)
         print(mask.shape)
