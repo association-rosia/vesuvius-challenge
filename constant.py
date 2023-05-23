@@ -2,6 +2,15 @@ from os.path import join, exists, abspath
 from os import pardir
 from os import sep
 
+# VARIABLES
+TRAIN_FRAGMENTS = ['1', '2', '3']
+VAL_FRAGMENTS = ['3']
+TEST_FRAGMENTS = ['a', 'b', 'c']
+
+Z_START = 0
+Z_DIM = 16
+TILE_SIZE = 256
+
 # KAGGLE DIRECTORIES
 KAGGLE_WORKING_DIR = join(abspath(sep), 'kaggle', 'working')
 KAGGLE_INPUT_DIR = join(abspath(sep), 'kaggle', 'input')
@@ -53,12 +62,3 @@ TEST_SAVE_PATH = KAGGLE_TEST_FRAGMENTS_PATH if exists(KAGGLE_TEST_FRAGMENTS_PATH
     else PARENT_TEST_FRAGMENTS_PATH
 
 TEST_READ_PATH = TEST_SAVE_PATH
-
-# VARIABLES
-TRAIN_FRAGMENTS = ['1', '2']
-VAL_FRAGMENTS = ['3']
-TEST_FRAGMENTS = ['a', 'b', 'c']
-
-Z_START = 0
-Z_DIM = 65
-TILE_SIZE = 256

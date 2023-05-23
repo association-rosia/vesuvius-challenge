@@ -126,7 +126,7 @@ def tile_fragment(self, fragment):
 
     print(f'\nLoad slice images from fragment {fragment}...')
     image_path = os.path.join(fragment_path, 'surface_volume/*.tif')
-    image_shape = get_mask_shape(fragment_path)
+    image_shape = get_mask_shape()
     image = build_3d_image(image_path, shape=(Z_DIM, image_shape[0], image_shape[1]))
 
     print(f'\nBuild image tiler from fragment {fragment}...')
