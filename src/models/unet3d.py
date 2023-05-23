@@ -11,8 +11,8 @@ class ConvBlock3d(nn.Module):
         self.bn1 = nn.BatchNorm3d(out_channels)
 
         # * Uncomment if we get more gpu memory in the future
-        # self.conv2 = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1)
-        # self.bn2 = nn.BatchNorm3d(out_channels)
+        self.conv2 = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm3d(out_channels)
 
         self.relu = nn.ReLU()
 
@@ -21,9 +21,9 @@ class ConvBlock3d(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         # ! Do not forget to also uncomment this.
-        # x = self.conv2(x)
-        # x = self.bn2(x)
-        # x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
 
         return x
 
