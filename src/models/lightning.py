@@ -1,5 +1,5 @@
-import os, sys
-
+import os
+import sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
@@ -12,7 +12,7 @@ from src.models.metrics import F05Score
 from src.models.unet3d import UNet3d
 
 from src.utils import get_device
-DEVICE = get_device()
+device = get_device()
 
 
 class LightningVesuvius(pl.LightningModule):
@@ -45,8 +45,8 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         _, inputs, masks, _ = batch
-        inputs = inputs.to(DEVICE)
-        masks = masks.to(DEVICE)
+        inputs = inputs.to(device)
+        masks = masks.to(device)
 
         # Forward pass
         outputs = self(inputs)
@@ -58,8 +58,8 @@ class LightningVesuvius(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         fragments_ids, inputs, masks, coords = batch
-        inputs = inputs.to(DEVICE)
-        masks = masks.to(DEVICE)
+        inputs = inputs.to(device)
+        masks = masks.to(device)
 
         # Forward pass
         outputs = self(inputs)
@@ -100,11 +100,10 @@ class LightningVesuvius(pl.LightningModule):
 if __name__ == "__main__":
     from pytorch_lightning.loggers import WandbLogger
     from pytorch_lightning.callbacks import ModelCheckpoint
-    from src.data.make_dataset import VesuviusDataset
+    from src.data.make_dataset_v2 import VesuviusDataset
     from torch.utils.data import DataLoader
     from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS
     from src.utils import get_dict_mask_shapes
-
     import wandb
 
     wandb.init(
@@ -135,28 +134,22 @@ if __name__ == "__main__":
     )
 
     train_dataloader = DataLoader(
-        dataset=VesuviusDataset(
-            TRAIN_FRAGMENTS,
-            test=False,
-            augmentation=True,
-            on_ram='after',
-            save=False,
-            read=True
-        ),
+        dataset=VesuviusDataset(fragments=TRAIN_FRAGMENTS,
+                                test=False,
+                                threshold=0.01,
+                                augmentation=True,
+                                device=device),
         batch_size=8,
         shuffle=False,
         drop_last=True,
     )
 
     val_dataloader = DataLoader(
-        dataset=VesuviusDataset(
-            VAL_FRAGMENTS,
-            test=False,
-            augmentation=True,
-            on_ram='after',
-            save=False,
-            read=True
-        ),
+        dataset=VesuviusDataset(fragments=VAL_FRAGMENTS,
+                                test=False,
+                                threshold=0.01,
+                                augmentation=True,
+                                device=device),
         batch_size=8,
         shuffle=False,
         drop_last=True,

@@ -118,12 +118,13 @@ class VesuviusDataset(Dataset):
 
 
 if __name__ == '__main__':
-    DEVICE = get_device()
+    device = get_device()
+
     train_dataset = VesuviusDataset(fragments=TRAIN_FRAGMENTS,
                                     test=False,
                                     threshold=0.01,
                                     augmentation=True,
-                                    device=DEVICE)
+                                    device=device)
 
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
     for fragment, bbox, mask, image in train_dataloader:

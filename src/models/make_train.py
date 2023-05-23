@@ -12,9 +12,9 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.data.make_dataset import VesuviusDataset
+from src.data.make_dataset_v2 import VesuviusDataset
 from src.models.lightning import LightningVesuvius
-from src.utils import get_dict_mask_shapes
+from src.utils import get_dict_mask_shapes, get_device
 
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE
 
@@ -24,32 +24,26 @@ import wandb
 def main():
     # empty the GPU cache
     torch.cuda.empty_cache()
-
+    device = get_device()
     model = get_model()
 
     train_dataloader = DataLoader(
-        dataset=VesuviusDataset(
-            TRAIN_FRAGMENTS,
-            test=False,
-            augmentation=True,
-            on_ram='after',
-            save=False,
-            read=True
-        ),
+        dataset=VesuviusDataset(fragments=TRAIN_FRAGMENTS,
+                                test=False,
+                                threshold=0.01,
+                                augmentation=True,
+                                device=device),
         batch_size=wandb.config.batch_size,
         shuffle=True,
         drop_last=True,
     )
 
     val_dataloader = DataLoader(
-        dataset=VesuviusDataset(
-            VAL_FRAGMENTS,
-            test=False,
-            augmentation=True,
-            on_ram='after',
-            save=False,
-            read=True
-        ),
+        dataset=VesuviusDataset(fragments=VAL_FRAGMENTS,
+                                test=False,
+                                threshold=0.01,
+                                augmentation=True,
+                                device=device),
         batch_size=wandb.config.batch_size,
         shuffle=False,
         drop_last=True,
@@ -65,6 +59,8 @@ def main():
 
 
 def get_model():
+    model_parameters = dict()
+
     if wandb.config.model_name == "UNet3d":
         num_block = wandb.config.num_block
         model_parameters = dict(
