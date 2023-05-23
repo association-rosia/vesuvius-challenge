@@ -18,6 +18,8 @@ from tiler import Tiler
 from src.utils import get_device
 from constant import Z_DIM, TILE_SIZE, TRAIN_FRAGMENTS, TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
 
+import matplotlib.pyplot as plt
+
 
 def make_mask(fragment_path):
     mask_path = os.path.join(fragment_path, 'inklabels.png')
@@ -47,23 +49,11 @@ def make_image(fragment_path, shape, padding):
     return image_pad
 
 
-def get_items(fragment, tiler, mask_pad):
-    items = []
-    tiles = tiler(mask_pad)
-
-    for tile in tiles:
-        if tile[1].max() > 0:  # TODO: take if > 5% white
-            bbox = tiler.get_tile_bbox(tile[0])
-            bbox = torch.IntTensor([bbox[0][0], bbox[0][1], bbox[1][0], bbox[1][1]])
-            items.append({'fragment': fragment, 'bbox': bbox})
-
-    return items
-
-
 class VesuviusDataset(Dataset):
-    def __init__(self, fragments, test, augmentation, device):
+    def __init__(self, fragments, test, threshold, augmentation, device):
         self.fragments = fragments
         self.test = test
+        self.threshold = threshold
         self.augmentation = augmentation
         self.device = device
         self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
@@ -87,7 +77,7 @@ class VesuviusDataset(Dataset):
             fragment_path = os.path.join(self.set_path, str(fragment))
             tiler, mask_pad, shape, padding = make_mask(fragment_path)
             image_pad = make_image(fragment_path, shape, padding)
-            items += get_items(fragment, tiler, mask_pad)
+            items += self.get_items(fragment, tiler, mask_pad)
 
             data[fragment] = {
                 'mask': torch.from_numpy(mask_pad).to(self.device),
@@ -95,6 +85,18 @@ class VesuviusDataset(Dataset):
             }
 
         return data, items
+
+    def get_items(self, fragment, tiler, mask_pad):
+        items = []
+        tiles = tiler(mask_pad)
+
+        for tile in tiles:
+            if tile[1].sum() / (255 * TILE_SIZE ** 2) >= self.threshold:
+                bbox = tiler.get_tile_bbox(tile[0])
+                bbox = torch.IntTensor([bbox[0][0], bbox[0][1], bbox[1][0], bbox[1][1]])
+                items.append({'fragment': fragment, 'bbox': bbox})
+
+        return items
 
     def __len__(self):
         return len(self.items)
@@ -119,11 +121,11 @@ if __name__ == '__main__':
     DEVICE = get_device()
     train_dataset = VesuviusDataset(fragments=TRAIN_FRAGMENTS,
                                     test=False,
+                                    threshold=0.01,
                                     augmentation=True,
                                     device=DEVICE)
 
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
-
     for fragment, bbox, mask, image in train_dataloader:
         print(fragment)
         print(bbox.shape)
