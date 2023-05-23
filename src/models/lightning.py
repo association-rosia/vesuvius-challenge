@@ -97,7 +97,7 @@ class LightningVesuvius(pl.LightningModule):
 if __name__ == '__main__':
     from pytorch_lightning.loggers import WandbLogger
     from pytorch_lightning.callbacks import ModelCheckpoint
-    from src.data.make_dataset_v2 import VesuviusDataset
+    from src.data.make_dataset import VesuviusDataset
     from torch.utils.data import DataLoader
     from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS
     from src.utils import get_dict_mask_shapes

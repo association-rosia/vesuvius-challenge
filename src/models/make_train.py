@@ -12,7 +12,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.data.make_dataset_v2 import VesuviusDataset
+from src.data.make_dataset import VesuviusDataset
 from src.models.lightning import LightningVesuvius
 from src.utils import get_dict_mask_shapes, get_device
 
