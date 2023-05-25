@@ -42,8 +42,8 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         _, _, masks, inputs = batch
-        inputs.to(device)
-        masks.to(device)
+        inputs.to(self.device)
+        masks.to(self.device)
 
         # Forward pass
         outputs = self.forward(inputs)
@@ -55,8 +55,8 @@ class LightningVesuvius(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, inputs = batch
-        inputs.to(device)
-        masks.to(device)
+        inputs.to(self.device)
+        masks.to(self.device)
 
         # Forward pass
         outputs = self.forward(inputs)
