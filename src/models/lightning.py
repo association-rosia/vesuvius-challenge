@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 
 from src.models.losses import CombinedLoss
 from src.models.metrics import F05Score
-from src.models.UNet3D import UNet3D
+from src.models.unet3d import UNet3D
 
 
 class LightningVesuvius(pl.LightningModule):
