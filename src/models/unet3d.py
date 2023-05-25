@@ -116,7 +116,7 @@ class SegmenterHead(nn.Module):
         return outputs
 
 
-class UNet3d(nn.Module):
+class UNet3D(nn.Module):
     def __init__(self, list_channels, inputs_size):
         super().__init__()
 
@@ -159,6 +159,6 @@ if __name__ == "__main__":
 
     from constant import TILE_SIZE
 
-    model = UNet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
+    model = UNet3D(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
     inputs = torch.randn((8, 8, 256, 256))
     print(model(inputs).shape)
