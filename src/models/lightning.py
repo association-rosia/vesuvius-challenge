@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 
 from src.models.losses import CombinedLoss
 from src.models.metrics import F05Score
-from src.models.unet3d import UNet3D
+from src.models.unet3d import Unet3d
 
 
 class LightningVesuvius(pl.LightningModule):
@@ -27,7 +27,7 @@ class LightningVesuvius(pl.LightningModule):
 
         # Model
         if model_name == 'UNet3D':
-            self.pytorch_model = UNet3D(**model_parameters)
+            self.pytorch_model = Unet3d(**model_parameters)
 
         # Training parameters
         self.learning_rate = learning_rate
