@@ -11,8 +11,6 @@ from constant import TRAIN_FRAGMENTS, TILE_SIZE, Z_DIM
 
 device = get_device()
 
-model = UNet3D(in_channels=1, out_channels=1).to(device).half()
-
 train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
                                 tile_size=TILE_SIZE,
                                 num_slices=Z_DIM,
@@ -33,4 +31,5 @@ for fragment, bbox, mask, image in train_dataloader:
     print(image.shape)
     break
 
+model = UNet3D(in_channels=1, out_channels=1).to(device).half()
 res = model(image)
