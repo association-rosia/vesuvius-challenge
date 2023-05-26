@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
 import torch
@@ -31,5 +32,5 @@ for fragment, bbox, mask, image in train_dataloader:
     print(image.shape)
     break
 
-model = ResidualUNet3D(in_channels=1, out_channels=1).half().to(device)
+model = ResidualUNet3D(in_channels=1, out_channels=2).half().to(device)
 res = model(image)
