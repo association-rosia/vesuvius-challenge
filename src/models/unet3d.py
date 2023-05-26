@@ -94,7 +94,7 @@ class UNetDecoder3d(nn.Module):
         return x
 
 
-class SegmenterHead(nn.Module):
+class SegmentationHead(nn.Module):
     def __init__(self, in_channels, out_channels, inputs_size) -> None:
         super().__init__()
 
@@ -116,7 +116,7 @@ class SegmenterHead(nn.Module):
         return outputs
 
 
-class UNet3d(nn.Module):
+class Unet3d(nn.Module):
     def __init__(self, list_channels, inputs_size):
         super().__init__()
 
@@ -124,7 +124,7 @@ class UNet3d(nn.Module):
         self.encoder = UNetEncoder3d(list_channels[:-1])
         self.bottleneck = ConvBlock3d(*list_channels[-2:])
         self.decoder = UNetDecoder3d(list_channels[1:])
-        self.segmenter = SegmenterHead(
+        self.segmenter = SegmentationHead(
             list_channels[1], list_channels[0], inputs_size
         )
 
@@ -159,6 +159,6 @@ if __name__ == "__main__":
 
     from constant import TILE_SIZE
 
-    model = UNet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
+    model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
     inputs = torch.randn((8, 8, 256, 256))
     print(model(inputs).shape)

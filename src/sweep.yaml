@@ -12,9 +12,9 @@ parameters:
   # Model name
   model_name:
     distribution: constant
-    value: 'UNet3d'
+    value: 'UNet3D'
 
-  # UNet3d number of Encoder/Decoder block
+  # UNet3D number of Encoder/Decoder block
   num_block:
     distribution: categorical
     values: [1, 2, 3]

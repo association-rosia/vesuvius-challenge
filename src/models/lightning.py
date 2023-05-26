@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 
 from src.models.losses import CombinedLoss
 from src.models.metrics import F05Score
-from src.models.unet3d import UNet3d
+from src.models.unet3d import Unet3d
 
 
 class LightningVesuvius(pl.LightningModule):
@@ -26,8 +26,8 @@ class LightningVesuvius(pl.LightningModule):
         super().__init__()
 
         # Model
-        if model_name == 'UNet3d':
-            self.pytorch_model = UNet3d(**model_parameters)
+        if model_name == 'UNet3D':
+            self.pytorch_model = Unet3d(**model_parameters)
 
         # Training parameters
         self.learning_rate = learning_rate
@@ -97,9 +97,9 @@ class LightningVesuvius(pl.LightningModule):
 if __name__ == '__main__':
     from pytorch_lightning.loggers import WandbLogger
     from pytorch_lightning.callbacks import ModelCheckpoint
-    from src.data.make_dataset import VesuviusDataset
+    from src.data.make_dataset import DatasetVesuvius
     from torch.utils.data import DataLoader
-    from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS
+    from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
     from src.utils import get_dict_mask_shapes
     import wandb
     from src.utils import get_device
@@ -134,10 +134,13 @@ if __name__ == '__main__':
     )
 
     train_dataloader = DataLoader(
-        dataset=VesuviusDataset(fragments=TRAIN_FRAGMENTS,
-                                test=False,
-                                threshold=0.01,
+        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
+                                tile_size=TILE_SIZE,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
                                 augmentation=True,
+                                test=False,
                                 device=device),
         batch_size=8,
         shuffle=False,
@@ -145,10 +148,13 @@ if __name__ == '__main__':
     )
 
     val_dataloader = DataLoader(
-        dataset=VesuviusDataset(fragments=VAL_FRAGMENTS,
-                                test=False,
-                                threshold=0.01,
+        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
+                                tile_size=TILE_SIZE,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
                                 augmentation=True,
+                                test=False,
                                 device=device),
         batch_size=8,
         shuffle=False,
@@ -158,7 +164,7 @@ if __name__ == '__main__':
     val_mask_shapes = get_dict_mask_shapes(VAL_FRAGMENTS)
 
     model = LightningVesuvius(
-        model_name='UNet3d',
+        model_name='UNet3D',
         model_parameters=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
         val_mask_shapes=val_mask_shapes,
     )
