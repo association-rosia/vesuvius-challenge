@@ -33,5 +33,5 @@ for fragment, bbox, mask, image in train_dataloader:
     break
 
 model = ResidualUNet3D(in_channels=1, out_channels=1, f_maps=[1, 32, 64]).half().to(device)
-model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
+# model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
 res = model(image)
