@@ -27,52 +27,50 @@ def main():
     device = get_device()
     model = get_model()
 
-    train_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
-                                tile_size=TILE_SIZE,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
-        batch_size=wandb.config.batch_size,
-        shuffle=True,
-        drop_last=True,
-    )
+    train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
+                                    tile_size=TILE_SIZE,
+                                    num_slices=Z_DIM,
+                                    random_slices=False,
+                                    selection_thr=0.01,
+                                    augmentation=True,
+                                    test=False,
+                                    device=device)
 
-    val_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
-                                tile_size=TILE_SIZE,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
-        batch_size=wandb.config.batch_size,
-        shuffle=False,
-        drop_last=True,
-    )
+    train_dataloader = DataLoader(dataset=train_dataset,
+                                  batch_size=wandb.config.batch_size,
+                                  shuffle=True,
+                                  drop_last=True)
+
+    val_dataset = DatasetVesuvius(fragments=VAL_FRAGMENTS,
+                                  tile_size=TILE_SIZE,
+                                  num_slices=Z_DIM,
+                                  random_slices=False,
+                                  selection_thr=0.01,
+                                  augmentation=True,
+                                  test=False,
+                                  device=device)
+
+    val_dataloader = DataLoader(dataset=val_dataset,
+                                batch_size=wandb.config.batch_size,
+                                shuffle=False,
+                                drop_last=True)
 
     trainer = get_trainer()
 
-    trainer.fit(
-        model=model,
-        train_dataloaders=train_dataloader,
-        val_dataloaders=val_dataloader,
-    )
+    trainer.fit(model=model,
+                train_dataloaders=train_dataloader,
+                val_dataloaders=val_dataloader)
 
 
 def get_model():
-    model_parameters = dict()
+    model_parameters = {}
 
     if wandb.config.model_name == 'UNet3D':
         num_block = wandb.config.num_block
-        model_parameters = dict(
-            list_channels=[1] + [32 * 2 ** i for i in range(num_block)],
-            inputs_size=TILE_SIZE,
-        )
+        model_parameters = {
+            'list_channels': [1] + [32 * 2 ** i for i in range(num_block)],
+            'inputs_size': TILE_SIZE
+        }
 
     lightning_model = LightningVesuvius(
         model_name=wandb.config.model_name,
@@ -111,22 +109,21 @@ def get_trainer():
 
 
 if __name__ == '__main__':
-
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
             entity='winged-bull',
             group='test',
-            config=dict(
-                batch_size=16,
-                model_name='UNet3D',
-                num_block=2,
-                bce_weight=1,
-                scheduler_patience=3,
-                learning_rate=0.0001,
-                epochs=3,
-                f05score_threshold=0.5,
-            ),
+            config={
+                'batch_size': 16,
+                'model_name': 'UNet3D',
+                'num_block': 2,
+                'bce_weight': 1,
+                'scheduler_patience': 3,
+                'learning_rate': 0.0001,
+                'epochs': 3,
+                'f05score_threshold': 0.5
+            },
         )
     else:
         wandb.init(project='vesuvius-challenge-ink-detection', entity='winged-bull')

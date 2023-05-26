@@ -19,7 +19,7 @@ class LightningVesuvius(pl.LightningModule):
         model_parameters,
         learning_rate=0.0001,
         scheduler_patience=6,
-        bce_weight=1,
+        bce_weight=0.5,
         f05score_threshold=0.5,
         val_mask_shapes=None,
     ):
@@ -27,7 +27,7 @@ class LightningVesuvius(pl.LightningModule):
 
         # Model
         if model_name == 'UNet3D':
-            self.pytorch_model = Unet3d(**model_parameters)
+            self.pytorch_model = Unet3d(**model_parameters).half()
 
         # Training parameters
         self.learning_rate = learning_rate
@@ -42,12 +42,7 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         _, _, masks, inputs = batch
-        # inputs = inputs.to(device)
-        # masks = masks.to(device)
-
-        # Forward pass
         outputs = self.forward(inputs)
-
         loss = self.criterion(outputs, masks)
         self.log('train/loss', loss, on_step=False, on_epoch=True)
 
@@ -55,15 +50,9 @@ class LightningVesuvius(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, inputs = batch
-        # inputs = inputs.to(device)
-        # masks = masks.to(device)
-
-        # Forward pass
         outputs = self.forward(inputs)
         loss = self.criterion(outputs, masks)
         self.log('val/loss', loss, on_step=False, on_epoch=True)
-
-        # Update the evaluation metric
         self.metric.update(outputs, masks, bboxes, fragments)
 
         return {'loss', loss}
@@ -72,21 +61,17 @@ class LightningVesuvius(pl.LightningModule):
         # evaluate model on the validation dataset
         f05_score, sub_f05_score = self.metric.compute()
         # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
-
         metrics = {'val/F05Score': f05_score, 'val/SubF05Score': sub_f05_score}
-
         # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
         self.log_dict(metrics, on_step=False, on_epoch=True)
-
         self.metric.reset()
 
         return metrics
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
-        scheduler = ReduceLROnPlateau(
-            optimizer=optimizer, patience=self.scheduler_patience, verbose=True
-        )
+        scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=self.scheduler_patience, verbose=True)
+
         return {
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
@@ -105,10 +90,7 @@ if __name__ == '__main__':
     from src.utils import get_device
 
     device = get_device()
-
-    wandb.init(
-        project='vesuvius-challenge-ink-detection', group='test', entity='winged-bull'
-    )
+    wandb.init(project='vesuvius-challenge-ink-detection', group='test', entity='winged-bull')
 
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
