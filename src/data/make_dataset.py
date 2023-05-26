@@ -120,7 +120,7 @@ class DatasetVesuvius(Dataset):
         fragment, bbox = self.items[idx]['fragment'], self.items[idx]['bbox']
         x0, y0, x1, y1 = bbox
         mask = torch.unsqueeze(self.data[fragment]['mask'][x0:x1, y0:y1] / 255.0, dim=0)
-        image = torch.unsqueeze(self.data[fragment]['image'][:, x0:x1, y0:y1], 0) / 255.0
+        image = torch.unsqueeze(self.data[fragment]['image'][:, x0:x1, y0:y1] / 255.0, dim=0)
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
@@ -128,6 +128,9 @@ class DatasetVesuvius(Dataset):
             image = self.transforms(image)
             torch.manual_seed(seed)
             mask = torch.squeeze(self.transforms(mask))
+
+        image = image.type(torch.HalfTensor)
+        mask = mask.type(torch.HalfTensor)
 
         return fragment, bbox, mask, image
 

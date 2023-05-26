@@ -11,7 +11,7 @@ from constant import TRAIN_FRAGMENTS, TILE_SIZE, Z_DIM
 
 device = get_device()
 
-model = UNet3D(in_channels=1, out_channels=1).to(device)
+model = UNet3D(in_channels=1, out_channels=1).to(device).half()
 
 train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
                                 tile_size=TILE_SIZE,
