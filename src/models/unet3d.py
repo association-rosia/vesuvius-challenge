@@ -129,8 +129,6 @@ class Unet3d(nn.Module):
         )
 
     def forward(self, x):
-        x = torch.unsqueeze(x, 1)
-
         # Encoder
         x, list_skips = self.encoder(x)
 
