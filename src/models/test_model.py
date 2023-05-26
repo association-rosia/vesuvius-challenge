@@ -3,12 +3,11 @@ import sys
 
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
-import torch
-from src.models.model import UNet3D, ResidualUNet3D, ResidualUNetSE3D
 from src.utils import get_device
 from torch.utils.data import DataLoader
 from src.data.make_dataset import DatasetVesuvius
 from constant import TRAIN_FRAGMENTS, TILE_SIZE, Z_DIM
+from unet3d import Unet3d
 
 device = get_device()
 
@@ -32,6 +31,5 @@ for fragment, bbox, mask, image in train_dataloader:
     print(image.shape)
     break
 
-model = ResidualUNet3D(in_channels=1, out_channels=1, f_maps=[1, 32, 64]).half().to(device)
-# model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
+model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE).half().to(device)
 res = model(image)
