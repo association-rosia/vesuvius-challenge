@@ -54,7 +54,7 @@ class LightningVesuvius(pl.LightningModule):
         self.log_dict(metrics, on_step=False, on_epoch=True)
         self.metric.reset()
 
-        return metrics
+        # return metrics
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
