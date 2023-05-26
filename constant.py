@@ -3,7 +3,7 @@ from os import pardir
 from os import sep
 
 # VARIABLES
-TRAIN_FRAGMENTS = ['1', '2']
+TRAIN_FRAGMENTS = ['1', '2', '3']
 VAL_FRAGMENTS = ['3']
 TEST_FRAGMENTS = ['a', 'b', 'c']
 
