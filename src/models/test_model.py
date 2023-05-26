@@ -31,5 +31,5 @@ for fragment, bbox, mask, image in train_dataloader:
     print(image.shape)
     break
 
-model = UNet3D(in_channels=1, out_channels=1).to(device).half()
+model = ResidualUNet3D(in_channels=1, out_channels=1).to(device)
 res = model(image)
