@@ -1,12 +1,10 @@
-import os, sys
-
-parent = os.path.abspath(os.path.curdir)
-sys.path.insert(1, parent)
-
-import argparse
+import os
+import sys
+sys.path.insert(1, os.path.abspath(os.path.curdir))
 
 import torch
 from torch.utils.data import DataLoader
+from src.models.unet3d import Unet3d
 
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
@@ -22,10 +20,10 @@ import wandb
 
 
 def main():
-    # empty the GPU cache
     torch.cuda.empty_cache()
     device = get_device()
-    model = get_model()
+
+    lightning_model = get_lightning_model(model_name=wandb.config.model_name)
 
     train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
                                     tile_size=TILE_SIZE,
@@ -57,24 +55,21 @@ def main():
 
     trainer = get_trainer()
 
-    trainer.fit(model=model,
+    trainer.fit(model=lightning_model,
                 train_dataloaders=train_dataloader,
                 val_dataloaders=val_dataloader)
 
 
-def get_model():
-    model_parameters = {}
-
-    if wandb.config.model_name == 'UNet3D':
+def get_lightning_model(model_name):
+    if model_name == 'UNet3D':
         num_block = wandb.config.num_block
-        model_parameters = {
-            'list_channels': [1] + [32 * 2 ** i for i in range(num_block)],
-            'inputs_size': TILE_SIZE
-        }
+        model_parameters = {'list_channels': [1] + [32 * 2 ** i for i in range(num_block)], 'inputs_size': TILE_SIZE}
+        model = Unet3d(**model_parameters).half()
+    else:
+        raise 'Wrong model name'
 
     lightning_model = LightningVesuvius(
-        model_name=wandb.config.model_name,
-        model_parameters=model_parameters,
+        model=model,
         learning_rate=wandb.config.learning_rate,
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,

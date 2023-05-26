@@ -15,8 +15,7 @@ from src.models.unet3d import Unet3d
 class LightningVesuvius(pl.LightningModule):
     def __init__(
         self,
-        model_name,
-        model_parameters,
+        model,
         learning_rate=0.0001,
         scheduler_patience=6,
         bce_weight=0.5,
@@ -24,12 +23,7 @@ class LightningVesuvius(pl.LightningModule):
         val_mask_shapes=None,
     ):
         super().__init__()
-
-        # Model
-        if model_name == 'UNet3D':
-            self.pytorch_model = Unet3d(**model_parameters).half()
-
-        # Training parameters
+        self.model = model
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = CombinedLoss(bce_weight=bce_weight)
@@ -37,7 +31,7 @@ class LightningVesuvius(pl.LightningModule):
         # self.submission = Submission(val_image_sizes)
 
     def forward(self, inputs):
-        x = self.pytorch_model(inputs)
+        x = self.model(inputs)
         return x
 
     def training_step(self, batch, batch_idx):
@@ -145,9 +139,11 @@ if __name__ == '__main__':
 
     val_mask_shapes = get_dict_mask_shapes(VAL_FRAGMENTS)
 
+    model_parameters = dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
+    model = Unet3d(**model_parameters).half()
+
     model = LightningVesuvius(
-        model_name='UNet3D',
-        model_parameters=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
+        model=model,
         val_mask_shapes=val_mask_shapes,
     )
 
