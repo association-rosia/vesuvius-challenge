@@ -152,5 +152,5 @@ if __name__ == '__main__':
         print(fragment)
         print(bbox.shape)
         print(mask.shape)
-        print(image.shape)
+        print(image.dtype)
         break

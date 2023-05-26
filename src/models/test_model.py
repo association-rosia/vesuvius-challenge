@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
+import torch
 from src.models.model import UNet3D, ResidualUNet3D, ResidualUNetSE3D
 from src.utils import get_device
 from torch.utils.data import DataLoader
@@ -10,7 +11,7 @@ from constant import TRAIN_FRAGMENTS, TILE_SIZE, Z_DIM
 
 device = get_device()
 
-model = ResidualUNetSE3D(in_channels=1, out_channels=1).to(device)
+model = ResidualUNetSE3D(in_channels=1, out_channels=1).to(torch.float).to(device)
 
 train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
                                 tile_size=TILE_SIZE,
