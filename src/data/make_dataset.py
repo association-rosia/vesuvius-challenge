@@ -129,8 +129,8 @@ class DatasetVesuvius(Dataset):
             torch.manual_seed(seed)
             mask = torch.squeeze(self.transforms(mask))
 
-        image = image.type(torch.HalfTensor).to(self.device)
-        mask = mask.type(torch.HalfTensor).to(self.device)
+        image = image.type(torch.HalfTensor)
+        mask = mask.type(torch.HalfTensor)
 
         return fragment, bbox, mask, image
 

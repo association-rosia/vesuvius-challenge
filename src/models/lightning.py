@@ -13,15 +13,9 @@ from src.models.unet3d import Unet3d
 
 
 class LightningVesuvius(pl.LightningModule):
-    def __init__(
-        self,
-        model,
-        learning_rate=0.0001,
-        scheduler_patience=6,
-        bce_weight=0.5,
-        f05score_threshold=0.5,
-        val_mask_shapes=None,
-    ):
+    def __init__(self, model, learning_rate=0.0001, scheduler_patience=6, bce_weight=0.5, f05score_threshold=0.5,
+                 val_mask_shapes=None):
+
         super().__init__()
         self.model = model
         self.learning_rate = learning_rate

@@ -42,8 +42,8 @@ class F05Score(torchmetrics.Metric):
             targets, coords, self.indexes, self.mask_shapes
         )
 
-        vector_predictions = torch.Tensor().to(device=self.device)
-        vector_targets = torch.Tensor().to(device=self.device)
+        vector_predictions = torch.Tensor()
+        vector_targets = torch.Tensor()
 
         for fragment_id in self.mask_shapes.keys():
             view_predictions = reconstructed_predictions[fragment_id].view(-1)
@@ -65,10 +65,10 @@ class F05Score(torchmetrics.Metric):
 
         return f05_score, sub_f05_score
 
-    def to(self, device):
-        super().to(device=device)
-        self.f05score.to(device=device)
-        return self
+    # def to(self, device):
+    #     super().to(device=device)
+    #     self.f05score.to(device=device)
+    #     return self
 
     def reset(self):
         self.predictions = []
