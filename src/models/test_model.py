@@ -11,6 +11,8 @@ from unet3d import Unet3d
 
 device = get_device()
 
+model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE).half().to(device)
+
 train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
                                 tile_size=TILE_SIZE,
                                 num_slices=Z_DIM,
@@ -29,7 +31,9 @@ for fragment, bbox, mask, image in train_dataloader:
     print(bbox.shape)
     print(mask.shape)
     print(image.shape)
+
+    res = model(image)
+    print(res.shape)
     break
 
-model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE).half().to(device)
-res = model(image)
+

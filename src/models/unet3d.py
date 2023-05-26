@@ -129,21 +129,11 @@ class Unet3d(nn.Module):
         )
 
     def forward(self, x):
-        # Encoder
         x, list_skips = self.encoder(x)
-
-        # Botteneck
         x = self.bottleneck(x)
-
-        # Decoder
         x = self.decoder(x, list_skips)
-
-        # Segmenter Head
         x = self.segmenter(x)
-
-        # * For Torch 2.0: torch.squeeze(x, (1, 2))
-        x = torch.squeeze(x, 2)
-        x = torch.squeeze(x, 1)
+        x = torch.squeeze(torch.squeeze(x, 2), 1)
 
         return x
 
