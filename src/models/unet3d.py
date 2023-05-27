@@ -112,9 +112,9 @@ class SegmentationHead(nn.Module):
         x = self.outputs2d(x)
 
         # TODO: uncomment this
-        outputs = self.sigmoid(x)
+        # outputs = self.sigmoid(x)
 
-        return outputs
+        return x
 
 
 class Unet3d(nn.Module):

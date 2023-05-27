@@ -9,22 +9,18 @@ class CombinedLoss(nn.Module):
         if not ((dice_weight is None) ^ (bce_weight is None)):
             raise TypeError(
                 f'dice_weight and bce_weight are both None or both defined. dice_weight={type(dice_weight)}, bce_weight={type(bce_weight)}')
-        if not dice_weight is None:
+        if dice_weight is not None:
             self.dice_weight = dice_weight
             self.bce_weight = 1 - dice_weight
         else:
             self.bce_weight = bce_weight
             self.dice_weight = 1 - bce_weight
 
-        self.bce_loss = nn.BCELoss()
+        self.bce_loss = nn.BCEWithLogitsLoss()
         self.dice_loss = DiceLoss()
 
     def forward(self, predictions, targets):
         # Compute binary cross-entropy (BCE) loss
-
-        print(torch.min(predictions), torch.max(predictions))
-        print(torch.min(targets), torch.max(targets))
-
         bce_loss = self.bce_loss(predictions, targets)
 
         # Compute Dice loss

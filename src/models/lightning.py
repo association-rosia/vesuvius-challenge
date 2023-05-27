@@ -44,8 +44,6 @@ class LightningVesuvius(pl.LightningModule):
         batch['images'].to(self.device)
         batch['masks'].to(self.device)
 
-        print(batch['images'].shape, batch['masks'].shape)
-
         # Forward pass
         outputs = self.forward(batch['images'])
 
