@@ -59,12 +59,15 @@ class F05Score(torchmetrics.Metric):
         masks = masks.view(-1)
 
         # Calculate F0.5 score between sub images and sub label masks
-        print('\n')
+        print()
         print(outputs)
-        print('\n')
+        print()
         print(masks)
-        print('\n')
+        print()
         sub_f05_score = self.f05score(outputs, masks)
+        print()
+        print(sub_f05_score)
+        print()
 
         # Calculate F0.5 score between reconstructed images and label masks
         f05_score = self.f05score(vector_outputs, vector_masks)
