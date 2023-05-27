@@ -22,7 +22,7 @@ class F05Score(torchmetrics.Metric):
         self.add_state('preds', default=[], dist_reduce_fx=None)
 
         self.fragments_shape = fragments_shape
-        self.f05score = BinaryFBetaScore(0.5, threshold).half()
+        self.f05score = BinaryFBetaScore(0.5, threshold)
 
     def update(self, fragments, bboxes, target, preds):
         self.fragments += fragments
@@ -39,8 +39,8 @@ class F05Score(torchmetrics.Metric):
         reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape)
         reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape)
 
-        vector_preds = torch.Tensor().to(device=self.device)
-        vector_target = torch.Tensor().to(device=self.device)
+        vector_preds = torch.FloatTensor()
+        vector_target = torch.FloatTensor()
 
         for fragment_id in self.fragments_shape.keys():
             view_preds = reconstructed_preds[fragment_id].view(-1)
@@ -48,12 +48,8 @@ class F05Score(torchmetrics.Metric):
             view_target = reconstructed_target[fragment_id].view(-1)
             vector_target = torch.cat((view_target, vector_target), dim=0)
 
-        preds = preds.view(-1)
-        target = target.view(-1)
-
-        print()
-        print(torch.min(target), torch.max(target))
-        print()
+        preds = preds.view(-1).type(torch.FloatTensor)
+        target = target.view(-1).type(torch.FloatTensor)
 
         # Calculate F0.5 score between sub images and sub label target
         sub_f05_score = self.f05score(preds, target)
@@ -62,11 +58,6 @@ class F05Score(torchmetrics.Metric):
         f05_score = self.f05score(vector_preds, vector_target)
 
         return f05_score, sub_f05_score
-
-    def to(self, device):
-        super().to(device=device)
-        self.f05score.to(device=device)
-        return self
 
     def reset(self):
         self.fragments = []
