@@ -15,10 +15,10 @@ from src.utils import reconstruct_images
 class F05Score(torchmetrics.Metric):
     def __init__(self, mask_shapes, threshold):
         super().__init__()
-        self.add_state("predictions", default=[], dist_reduce_fx=None)
-        self.add_state("targets", default=[], dist_reduce_fx=None)
-        self.add_state("coords", default=[], dist_reduce_fx=None)
-        self.add_state("indexes", default=[], dist_reduce_fx=None)
+        self.add_state('predictions', default=[], dist_reduce_fx=None)
+        self.add_state('targets', default=[], dist_reduce_fx=None)
+        self.add_state('coords', default=[], dist_reduce_fx=None)
+        self.add_state('indexes', default=[], dist_reduce_fx=None)
 
         self.mask_shapes = mask_shapes
         self.f05score = BinaryFBetaScore(0.5, threshold)

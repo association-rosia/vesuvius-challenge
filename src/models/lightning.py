@@ -30,8 +30,11 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         _, _, masks, inputs = batch
+        print(masks.shape, inputs.shape)
         outputs = self.forward(inputs)
+        print(outputs.shape)
         loss = self.criterion(outputs, masks)
+        print(loss)
         self.log('train/loss', loss, on_step=False, on_epoch=True)
 
         return loss
@@ -54,7 +57,7 @@ class LightningVesuvius(pl.LightningModule):
         self.log_dict(metrics, on_step=False, on_epoch=True)
         self.metric.reset()
 
-        # return metrics
+        return metrics
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
@@ -91,16 +94,12 @@ if __name__ == '__main__':
 
     logger = WandbLogger()
 
-    # use 3 batches of train, 2 batches of val and test
     trainer = pl.Trainer(
-        limit_train_batches=3,
-        limit_val_batches=3,
-        max_epochs=2,
+        max_epochs=5,
         callbacks=[checkpoint_callback],
         logger=logger,
         log_every_n_steps=1,
-        accelerator='gpu',
-        devices='1',
+        accelerator='gpu'
     )
 
     train_dataloader = DataLoader(
