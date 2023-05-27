@@ -41,7 +41,7 @@ class F05Score(torchmetrics.Metric):
 
         device = get_device()
         vector_preds = torch.HalfTensor().to(device)
-        vector_target = torch.FloatTensor().to(device)
+        vector_target = torch.HalfTensor().to(device)
 
         for fragment_id in self.fragments_shape.keys():
             view_preds = reconstructed_preds[fragment_id].view(-1)
