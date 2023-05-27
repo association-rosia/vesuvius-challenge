@@ -60,12 +60,9 @@ class LightningVesuvius(pl.LightningModule):
         # evaluate model on the validation dataset
         f05_score, sub_f05_score = self.metric.compute()
         # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
-
         metrics = {'val/F05Score': f05_score, 'val/SubF05Score': sub_f05_score}
-
         # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
         self.log_dict(metrics, on_step=False, on_epoch=True)
-
         self.metric.reset()
 
         return metrics
