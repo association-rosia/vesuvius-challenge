@@ -1,8 +1,10 @@
 import warnings
+
 warnings.filterwarnings('ignore')
 
 import os
 import sys
+
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
@@ -10,6 +12,7 @@ import cv2
 import numpy as np
 import glob
 import random
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -76,7 +79,8 @@ class DatasetVesuvius(Dataset):
         slices_files = sorted(glob.glob(os.path.join(fragment_path, 'surface_volume/*.tif')))
         slices_path = [slices_files[i] for i in self.slices]
 
-        for i, slice_path in enumerate(slices_path):
+        print(f'\nMake image from {fragment_path}')
+        for i, slice_path in tqdm(enumerate(slices_path), total=len(slices_path)):
             image[i, ...] = cv2.imread(slice_path, cv2.IMREAD_GRAYSCALE)
 
         padding.insert(0, (0, 0))
@@ -88,7 +92,8 @@ class DatasetVesuvius(Dataset):
         items = []
         tiles = tiler(mask_pad)
 
-        for tile in tiles:
+        print(f'\nGet items from fragment {fragment}')
+        for tile in tqdm(tiles, total=tiler.n_tiles):
             if tile[1].sum() / (255 * self.tile_size ** 2) >= self.selection_thr:
                 bbox = tiler.get_tile_bbox(tile[0])
                 bbox = torch.IntTensor([bbox[0][0], bbox[0][1], bbox[1][0], bbox[1][1]])
@@ -148,12 +153,16 @@ if __name__ == '__main__':
                                     device=device)
 
     train_dataloader = DataLoader(dataset=train_dataset,
-                                  batch_size=16)
+                                  batch_size=16,
+                                  shuffle=True,
+                                  drop_last=True,
+                                  pin_memory=True)
 
+    print('\n')
     for fragment, bbox, mask, image in train_dataloader:
         print(train_dataset.slices)
         print(fragment)
         print(bbox.shape)
         print(mask.shape)
-        print(image.dtype)
+        print(image.shape)
         break
