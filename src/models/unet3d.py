@@ -158,5 +158,5 @@ if __name__ == "__main__":
     from constant import TILE_SIZE
 
     model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
-    inputs = torch.randn((8, 8, 256, 256))
+    inputs = torch.randn((8, 1, 8, 256, 256))
     print(model(inputs))
