@@ -111,6 +111,7 @@ class SegmentationHead(nn.Module):
         # 2D outputs
         x = self.outputs2d(x)
 
+        # TODO: uncomment this
         # outputs = self.sigmoid(x)
 
         return x

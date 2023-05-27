@@ -33,7 +33,7 @@ class LightningVesuvius(pl.LightningModule):
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = CombinedLoss(bce_weight=bce_weight)
-        self.metric = F05Score(val_mask_shapes, f05score_threshold)
+        self.metric = F05Score(val_mask_shapes, f05score_threshold).to(self.device)
         # self.submission = Submission(val_image_sizes)
 
     def forward(self, inputs):
@@ -41,9 +41,10 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
-        
         batch['images'].to(self.device)
         batch['masks'].to(self.device)
+
+        print(batch['images'].shape, batch['masks'].shape)
 
         # Forward pass
         outputs = self.forward(batch['images'])
@@ -56,6 +57,8 @@ class LightningVesuvius(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         batch['images'].to(self.device)
         batch['masks'].to(self.device)
+
+        print(batch['images'].shape, batch['masks'].shape)
 
         # Forward pass
         outputs = self.forward(batch['images'])
