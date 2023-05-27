@@ -22,7 +22,7 @@ class F05Score(torchmetrics.Metric):
         self.add_state('preds', default=[], dist_reduce_fx=None)
 
         self.fragments_shape = fragments_shape
-        self.f05score = BinaryFBetaScore(0.5, threshold)
+        self.f05score = BinaryFBetaScore(0.5, threshold).half()
 
     def update(self, fragments, bboxes, target, preds):
         self.fragments += fragments
@@ -50,7 +50,7 @@ class F05Score(torchmetrics.Metric):
             vector_target = torch.cat((view_target, vector_target), dim=0)
 
         preds = preds.view(-1)
-        target = torch.where(target.view(-1) > 0.5, 1.0, 0.0)
+        target = target.view(-1)
 
         # Calculate F0.5 score between sub images and sub label target
         sub_f05_score = self.f05score(preds, target)
