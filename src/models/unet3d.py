@@ -102,7 +102,7 @@ class SegmentationHead(nn.Module):
 
         self.outputs2d = nn.AdaptiveMaxPool3d((out_channels, inputs_size, inputs_size))
 
-        # self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         # 3D outputs
@@ -112,9 +112,9 @@ class SegmentationHead(nn.Module):
         x = self.outputs2d(x)
 
         # TODO: uncomment this
-        # outputs = self.sigmoid(x)
+        outputs = self.sigmoid(x)
 
-        return x
+        return outputs
 
 
 class Unet3d(nn.Module):
