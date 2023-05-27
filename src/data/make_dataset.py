@@ -138,29 +138,29 @@ class DatasetVesuvius(Dataset):
         image = image.type(torch.HalfTensor)
         mask = mask.type(torch.HalfTensor)
 
-        return fragment, bbox, mask, image
+        return dict(fragments=fragment, bboxs=bbox, masks=mask, images=image)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     device = get_device()
 
-    train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
-                                    tile_size=TILE_SIZE,
-                                    num_slices=Z_DIM,
-                                    random_slices=False,
-                                    selection_thr=0.01,
-                                    augmentation=True,
-                                    test=False,
-                                    device=device)
+    train_dataset = DatasetVesuvius(
+        fragments=TRAIN_FRAGMENTS,
+        tile_size=TILE_SIZE,
+        num_slices=Z_DIM,
+        random_slices=False,
+        selection_thr=0.01,
+        augmentation=True,
+        test=False,
+        device=device,
+    )
 
-    train_dataloader = DataLoader(dataset=train_dataset,
-                                  batch_size=16)
+    train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
 
-    for fragment, bbox, mask, image in train_dataloader:
+    for batch in train_dataloader:
         print(train_dataset.slices)
-        print(fragment)
-        print(bbox.shape)
-        print(mask.shape)
-        print(image.shape)
+        print(batch["fragments"])
+        print(batch["bboxs"].shape)
+        print(batch["masks"].shape)
+        print(batch["images"].shape)
         break
-

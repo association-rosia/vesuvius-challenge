@@ -27,7 +27,7 @@ class LightningVesuvius(pl.LightningModule):
 
         # Model
         if model_name == 'UNet3D':
-            self.pytorch_model = Unet3d(**model_parameters)
+            self.pytorch_model = Unet3d(**model_parameters).half()
 
         # Training parameters
         self.learning_rate = learning_rate
@@ -41,30 +41,29 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
-        _, _, masks, inputs = batch
-        inputs.to(self.device)
-        masks.to(self.device)
+        
+        batch['images'].to(self.device)
+        batch['masks'].to(self.device)
 
         # Forward pass
-        outputs = self.forward(inputs)
+        outputs = self.forward(batch['images'])
 
-        loss = self.criterion(outputs, masks)
+        loss = self.criterion(outputs, batch['masks'])
         self.log('train/loss', loss, on_step=False, on_epoch=True)
 
         return {'loss': loss}
 
     def validation_step(self, batch, batch_idx):
-        fragments, bboxes, masks, inputs = batch
-        inputs.to(self.device)
-        masks.to(self.device)
+        batch['images'].to(self.device)
+        batch['masks'].to(self.device)
 
         # Forward pass
-        outputs = self.forward(inputs)
-        loss = self.criterion(outputs, masks)
+        outputs = self.forward(batch['images'])
+        loss = self.criterion(outputs, batch['masks'])
         self.log('val/loss', loss, on_step=False, on_epoch=True)
 
         # Update the evaluation metric
-        self.metric.update(outputs, masks, bboxes, fragments)
+        self.metric.update(outputs, batch['masks'], batch['bboxes'], batch['fragments'])
 
         return {'loss', loss}
 
