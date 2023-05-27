@@ -49,17 +49,13 @@ class F05Score(torchmetrics.Metric):
             view_target = reconstructed_target[fragment_id].view(-1)
             vector_target = torch.cat((view_target, vector_target), dim=0)
 
+        # Calculate F0.5 score between sub images and sub label target
         preds = preds.view(-1)
         target = torch.where(target.view(-1) > 0.5, 1, 0)
-
-        print()
-        print(target)
-        print()
-
-        # Calculate F0.5 score between sub images and sub label target
         sub_f05_score = self.f05score(preds, target)
 
         # Calculate F0.5 score between reconstructed images and label target
+        vector_target = torch.where(vector_target > 0.5, 1, 0)
         f05_score = self.f05score(vector_preds, vector_target)
 
         return f05_score, sub_f05_score
