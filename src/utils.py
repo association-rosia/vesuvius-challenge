@@ -24,8 +24,12 @@ def reconstruct_images(sub_masks: torch.Tensor, bboxes: torch.Tensor, fragments:
     }
 
     for i in range(sub_masks.shape[0]):
-        x0, y0, x1, y1 = bboxes[i]
+        x0, y0, x1, y1 = bboxes[i].item()
+
+        print()
         print(x0, y0, x1, y1)
+        print()
+
         reconstructed_images[fragments[i]][x0:x1, y0:y1] += sub_masks[i, :, :]
         count_map[fragments[i]][x0:x1, y0:y1] += 1
 
