@@ -36,22 +36,15 @@ class F05Score(torchmetrics.Metric):
         bboxes = torch.cat(self.bboxes, dim=0)
 
         # Reconstruct the original images from sub-masks
-        reconstructed_outputs = reconstruct_images(
-            outputs, bboxes, self.fragments, self.fragments_shape
-        )
-        reconstructed_masks = reconstruct_images(
-            masks, bboxes, self.fragments, self.fragments_shape
-        )
+        reconstructed_outputs = reconstruct_images(outputs, bboxes, self.fragments, self.fragments_shape)
+        reconstructed_masks = reconstruct_images(masks, bboxes, self.fragments, self.fragments_shape)
 
         vector_outputs = torch.Tensor().to(device=self.device)
         vector_masks = torch.Tensor().to(device=self.device)
 
         for fragment_id in self.fragments_shape.keys():
             view_outputs = reconstructed_outputs[fragment_id].view(-1)
-            vector_outputs = torch.cat(
-                (view_outputs, vector_outputs), dim=0
-            )
-
+            vector_outputs = torch.cat((view_outputs, vector_outputs), dim=0)
             view_masks = reconstructed_masks[fragment_id].view(-1)
             vector_masks = torch.cat((view_masks, vector_masks), dim=0)
 
@@ -60,14 +53,9 @@ class F05Score(torchmetrics.Metric):
 
         # Calculate F0.5 score between sub images and sub label masks
         print()
-        print(outputs)
-        print()
-        print(masks)
+        print(self.f05score.dtype)
         print()
         sub_f05_score = self.f05score(outputs, masks)
-        print()
-        print(sub_f05_score)
-        print()
 
         # Calculate F0.5 score between reconstructed images and label masks
         f05_score = self.f05score(vector_outputs, vector_masks)
