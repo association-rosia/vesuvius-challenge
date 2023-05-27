@@ -34,7 +34,7 @@ class LightningVesuvius(pl.LightningModule):
         loss = self.criterion(outputs, masks)
         self.log('train/loss', loss, on_step=False, on_epoch=True)
 
-        return {'loss': loss}
+        return loss
 
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, inputs = batch
@@ -43,7 +43,7 @@ class LightningVesuvius(pl.LightningModule):
         self.log('val/loss', loss, on_step=False, on_epoch=True)
         self.metric.update(outputs, masks, bboxes, fragments)
 
-        return {'loss', loss}
+        return loss
 
     def on_validation_epoch_end(self) -> None:
         # evaluate model on the validation dataset
