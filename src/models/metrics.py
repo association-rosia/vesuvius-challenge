@@ -10,7 +10,7 @@ from src.utils import reconstruct_images, get_device
 
 
 class F05Score(torchmetrics.Metric):
-    def __init__(self, fragments_shape, threshold, device):
+    def __init__(self, fragments_shape, threshold):
         super().__init__()
         self.fragments = []
         self.bboxes = []
