@@ -1,10 +1,12 @@
-import os
-import sys
-sys.path.insert(1, os.path.abspath(os.path.curdir))
+import os, sys
+
+parent = os.path.abspath(os.path.curdir)
+sys.path.insert(1, parent)
+
+import argparse
 
 import torch
 from torch.utils.data import DataLoader
-from src.models.unet3d import Unet3d
 
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
@@ -20,56 +22,61 @@ import wandb
 
 
 def main():
+    # empty the GPU cache
     torch.cuda.empty_cache()
     device = get_device()
+    model = get_model()
 
-    lightning_model = get_lightning_model(model_name=wandb.config.model_name)
+    train_dataloader = DataLoader(
+        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
+                                tile_size=TILE_SIZE,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
+                                augmentation=True,
+                                test=False,
+                                device=device),
+        batch_size=wandb.config.batch_size,
+        shuffle=True,
+        drop_last=True,
+    )
 
-    train_dataset = DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
-                                    tile_size=TILE_SIZE,
-                                    num_slices=Z_DIM,
-                                    random_slices=False,
-                                    selection_thr=0.01,
-                                    augmentation=True,
-                                    test=False,
-                                    device=device)
-
-    train_dataloader = DataLoader(dataset=train_dataset,
-                                  batch_size=wandb.config.batch_size,
-                                  shuffle=True,
-                                  drop_last=True)
-
-    val_dataset = DatasetVesuvius(fragments=VAL_FRAGMENTS,
-                                  tile_size=TILE_SIZE,
-                                  num_slices=Z_DIM,
-                                  random_slices=False,
-                                  selection_thr=0.01,
-                                  augmentation=True,
-                                  test=False,
-                                  device=device)
-
-    val_dataloader = DataLoader(dataset=val_dataset,
-                                batch_size=wandb.config.batch_size,
-                                shuffle=False,
-                                drop_last=True)
+    val_dataloader = DataLoader(
+        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
+                                tile_size=TILE_SIZE,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
+                                augmentation=True,
+                                test=False,
+                                device=device),
+        batch_size=wandb.config.batch_size,
+        shuffle=False,
+        drop_last=True,
+    )
 
     trainer = get_trainer()
 
-    trainer.fit(model=lightning_model,
-                train_dataloaders=train_dataloader,
-                val_dataloaders=val_dataloader)
+    trainer.fit(
+        model=model,
+        train_dataloaders=train_dataloader,
+        val_dataloaders=val_dataloader,
+    )
 
 
-def get_lightning_model(model_name):
-    if model_name == 'UNet3D':
+def get_model():
+    model_parameters = dict()
+
+    if wandb.config.model_name == 'UNet3D':
         num_block = wandb.config.num_block
-        model_parameters = {'list_channels': [1] + [32 * 2 ** i for i in range(num_block)], 'inputs_size': TILE_SIZE}
-        model = Unet3d(**model_parameters).half()
-    else:
-        raise 'Wrong model name'
+        model_parameters = dict(
+            list_channels=[1] + [32 * 2 ** i for i in range(num_block)],
+            inputs_size=TILE_SIZE,
+        )
 
     lightning_model = LightningVesuvius(
-        model=model,
+        model_name=wandb.config.model_name,
+        model_parameters=model_parameters,
         learning_rate=wandb.config.learning_rate,
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
@@ -104,21 +111,22 @@ def get_trainer():
 
 
 if __name__ == '__main__':
+
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
             entity='winged-bull',
             group='test',
-            config={
-                'batch_size': 16,
-                'model_name': 'UNet3D',
-                'num_block': 2,
-                'bce_weight': 1,
-                'scheduler_patience': 3,
-                'learning_rate': 0.0001,
-                'epochs': 3,
-                'f05score_threshold': 0.5
-            },
+            config=dict(
+                batch_size=16,
+                model_name='UNet3D',
+                num_block=2,
+                bce_weight=1,
+                scheduler_patience=3,
+                learning_rate=0.0001,
+                epochs=3,
+                f05score_threshold=0.5,
+            ),
         )
     else:
         wandb.init(project='vesuvius-challenge-ink-detection', entity='winged-bull')

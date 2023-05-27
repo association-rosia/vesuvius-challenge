@@ -15,10 +15,10 @@ from src.utils import reconstruct_images
 class F05Score(torchmetrics.Metric):
     def __init__(self, mask_shapes, threshold):
         super().__init__()
-        self.add_state('predictions', default=[], dist_reduce_fx=None)
-        self.add_state('targets', default=[], dist_reduce_fx=None)
-        self.add_state('coords', default=[], dist_reduce_fx=None)
-        self.add_state('indexes', default=[], dist_reduce_fx=None)
+        self.add_state("predictions", default=[], dist_reduce_fx=None)
+        self.add_state("targets", default=[], dist_reduce_fx=None)
+        self.add_state("coords", default=[], dist_reduce_fx=None)
+        self.add_state("indexes", default=[], dist_reduce_fx=None)
 
         self.mask_shapes = mask_shapes
         self.f05score = BinaryFBetaScore(0.5, threshold)
@@ -42,8 +42,8 @@ class F05Score(torchmetrics.Metric):
             targets, coords, self.indexes, self.mask_shapes
         )
 
-        vector_predictions = torch.Tensor()
-        vector_targets = torch.Tensor()
+        vector_predictions = torch.Tensor().to(device=self.device)
+        vector_targets = torch.Tensor().to(device=self.device)
 
         for fragment_id in self.mask_shapes.keys():
             view_predictions = reconstructed_predictions[fragment_id].view(-1)
@@ -65,10 +65,10 @@ class F05Score(torchmetrics.Metric):
 
         return f05_score, sub_f05_score
 
-    # def to(self, device):
-    #     super().to(device=device)
-    #     self.f05score.to(device=device)
-    #     return self
+    def to(self, device):
+        super().to(device=device)
+        self.f05score.to(device=device)
+        return self
 
     def reset(self):
         self.predictions = []
