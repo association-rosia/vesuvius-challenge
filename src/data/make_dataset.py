@@ -115,7 +115,6 @@ class DatasetVesuvius(Dataset):
                 'mask': torch.from_numpy(mask_pad).to(self.device),
                 'image': torch.from_numpy(image_pad).to(self.device)
             }
-        print('\n')
 
         return data, items
 
@@ -138,7 +137,7 @@ class DatasetVesuvius(Dataset):
         image = image.type(torch.HalfTensor)
         mask = mask.type(torch.HalfTensor)
 
-        return dict(fragments=fragment, bboxs=bbox, masks=mask, images=image)
+        return fragment, bbox, mask, image
 
 
 if __name__ == "__main__":
@@ -157,10 +156,10 @@ if __name__ == "__main__":
 
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
 
-    for batch in train_dataloader:
+    for fragments, bboxes, masks, images in train_dataloader:
         print(train_dataset.slices)
-        print(batch["fragments"])
-        print(batch["bboxs"].shape)
-        print(batch["masks"].shape)
-        print(batch["images"].shape)
+        print(fragments)
+        print(bboxes.shape)
+        print(masks.shape)
+        print(images.shape)
         break

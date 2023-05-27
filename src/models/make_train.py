@@ -3,8 +3,6 @@ import os, sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
-import argparse
-
 import torch
 from torch.utils.data import DataLoader
 
@@ -54,6 +52,8 @@ def main():
         shuffle=False,
         drop_last=True,
     )
+
+    print('\n')
 
     trainer = get_trainer()
 

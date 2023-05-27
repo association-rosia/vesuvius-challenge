@@ -41,30 +41,26 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
-        batch['images'].to(self.device)
-        batch['masks'].to(self.device)
+        fragments, bboxes, masks, images = batch
 
         # Forward pass
-        outputs = self.forward(batch['images'])
+        outputs = self.forward(images)
 
-        loss = self.criterion(outputs, batch['masks'])
+        loss = self.criterion(outputs, masks)
         self.log('train/loss', loss, on_step=False, on_epoch=True)
 
         return {'loss': loss}
 
     def validation_step(self, batch, batch_idx):
-        batch['images'].to(self.device)
-        batch['masks'].to(self.device)
-
-        print(batch['images'].shape, batch['masks'].shape)
+        fragments, bboxes, masks, images = batch
 
         # Forward pass
-        outputs = self.forward(batch['images'])
-        loss = self.criterion(outputs, batch['masks'])
+        outputs = self.forward(images)
+        loss = self.criterion(outputs, masks)
         self.log('val/loss', loss, on_step=False, on_epoch=True)
 
         # Update the evaluation metric
-        self.metric.update(outputs, batch['masks'], batch['bboxes'], batch['fragments'])
+        self.metric.update(fragments, bboxes, masks, outputs)
 
         return {'loss', loss}
 
