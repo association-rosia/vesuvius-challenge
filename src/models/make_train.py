@@ -12,11 +12,11 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.data.make_dataset import VesuviusDataset
+from src.data.make_dataset import DatasetVesuvius
 from src.models.lightning import LightningVesuvius
 from src.utils import get_dict_mask_shapes, get_device
 
-from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE
+from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE, Z_DIM
 
 import wandb
 
@@ -28,10 +28,13 @@ def main():
     model = get_model()
 
     train_dataloader = DataLoader(
-        dataset=VesuviusDataset(fragments=TRAIN_FRAGMENTS,
-                                test=False,
-                                threshold=0.01,
+        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
+                                tile_size=TILE_SIZE,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
                                 augmentation=True,
+                                test=False,
                                 device=device),
         batch_size=wandb.config.batch_size,
         shuffle=True,
@@ -39,10 +42,13 @@ def main():
     )
 
     val_dataloader = DataLoader(
-        dataset=VesuviusDataset(fragments=VAL_FRAGMENTS,
-                                test=False,
-                                threshold=0.01,
+        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
+                                tile_size=TILE_SIZE,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
                                 augmentation=True,
+                                test=False,
                                 device=device),
         batch_size=wandb.config.batch_size,
         shuffle=False,
@@ -61,7 +67,7 @@ def main():
 def get_model():
     model_parameters = dict()
 
-    if wandb.config.model_name == "UNet3d":
+    if wandb.config.model_name == 'UNet3D':
         num_block = wandb.config.num_block
         model_parameters = dict(
             list_channels=[1] + [32 * 2 ** i for i in range(num_block)],
@@ -84,17 +90,17 @@ def get_model():
 def get_trainer():
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
-        monitor="val/F05Score",
-        mode="max",
+        monitor='val/F05Score',
+        mode='max',
         dirpath=MODELS_DIR,
-        filename="{val/F05Score:.5f}-" + f"{wandb.run.name}-{wandb.run.id}",
+        filename='{val/F05Score:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
     )
 
-    lr_monitor = LearningRateMonitor(logging_interval="epoch")
+    lr_monitor = LearningRateMonitor(logging_interval='epoch')
 
     # init the trainer
     trainer = pl.Trainer(
-        accelerator="gpu",
+        accelerator='gpu',
         devices=1,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
@@ -104,16 +110,16 @@ def get_trainer():
     return trainer
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         wandb.init(
-            project="vesuvius-challenge-ink-detection",
-            entity="winged-bull",
-            group="test",
+            project='vesuvius-challenge-ink-detection',
+            entity='winged-bull',
+            group='test',
             config=dict(
                 batch_size=16,
-                model_name="UNet3d",
+                model_name='UNet3D',
                 num_block=2,
                 bce_weight=1,
                 scheduler_patience=3,
@@ -123,6 +129,6 @@ if __name__ == "__main__":
             ),
         )
     else:
-        wandb.init(project="vesuvius-challenge-ink-detection", entity="winged-bull")
+        wandb.init(project='vesuvius-challenge-ink-detection', entity='winged-bull')
 
     main()
