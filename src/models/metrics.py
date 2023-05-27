@@ -14,51 +14,52 @@ class F05Score(torchmetrics.Metric):
         super().__init__()
         self.fragments = []
         self.bboxes = []
-        self.masks = []
-        self.outputs = []
+        self.target = []
+        self.preds = []
         self.add_state('fragments', default=[], dist_reduce_fx=None)
         self.add_state('bboxes', default=[], dist_reduce_fx=None)
-        self.add_state('masks', default=[], dist_reduce_fx=None)
-        self.add_state('outputs', default=[], dist_reduce_fx=None)
+        self.add_state('target', default=[], dist_reduce_fx=None)
+        self.add_state('preds', default=[], dist_reduce_fx=None)
 
         self.fragments_shape = fragments_shape
-        self.f05score = BinaryFBetaScore(0.5, threshold)
+        self.f05score = BinaryFBetaScore(0.5, threshold).half()
 
-    def update(self, fragments, bboxes, masks, outputs):
+    def update(self, fragments, bboxes, target, preds):
         self.fragments += fragments
         self.bboxes.append(bboxes)
-        self.masks.append(masks)
-        self.outputs.append(outputs)
+        self.target.append(target)
+        self.preds.append(preds)
 
     def compute(self):
-        outputs = torch.cat(self.outputs, dim=0)
-        masks = torch.cat(self.masks, dim=0)
+        preds = torch.cat(self.preds, dim=0)
+        target = torch.cat(self.target, dim=0)
         bboxes = torch.cat(self.bboxes, dim=0)
 
-        # Reconstruct the original images from sub-masks
-        reconstructed_outputs = reconstruct_images(outputs, bboxes, self.fragments, self.fragments_shape)
-        reconstructed_masks = reconstruct_images(masks, bboxes, self.fragments, self.fragments_shape)
+        # Reconstruct the original images from sub-target
+        reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape)
+        reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape)
 
-        vector_outputs = torch.Tensor().to(device=self.device)
-        vector_masks = torch.Tensor().to(device=self.device)
+        vector_preds = torch.Tensor().to(device=self.device)
+        vector_target = torch.Tensor().to(device=self.device)
 
         for fragment_id in self.fragments_shape.keys():
-            view_outputs = reconstructed_outputs[fragment_id].view(-1)
-            vector_outputs = torch.cat((view_outputs, vector_outputs), dim=0)
-            view_masks = reconstructed_masks[fragment_id].view(-1)
-            vector_masks = torch.cat((view_masks, vector_masks), dim=0)
+            view_preds = reconstructed_preds[fragment_id].view(-1)
+            vector_preds = torch.cat((view_preds, vector_preds), dim=0)
+            view_target = reconstructed_target[fragment_id].view(-1)
+            vector_target = torch.cat((view_target, vector_target), dim=0)
 
-        outputs = outputs.view(-1)
-        masks = masks.view(-1)
+        preds = preds.view(-1)
+        target = target.view(-1)
 
-        # Calculate F0.5 score between sub images and sub label masks
         print()
-        print(self.f05score.dtype)
+        print(torch.min(target), torch.max(target))
         print()
-        sub_f05_score = self.f05score(outputs, masks)
 
-        # Calculate F0.5 score between reconstructed images and label masks
-        f05_score = self.f05score(vector_outputs, vector_masks)
+        # Calculate F0.5 score between sub images and sub label target
+        sub_f05_score = self.f05score(preds, target)
+
+        # Calculate F0.5 score between reconstructed images and label target
+        f05_score = self.f05score(vector_preds, vector_target)
 
         return f05_score, sub_f05_score
 
@@ -70,8 +71,8 @@ class F05Score(torchmetrics.Metric):
     def reset(self):
         self.fragments = []
         self.bboxes = []
-        self.masks = []
-        self.outputs = []
+        self.target = []
+        self.preds = []
 
 
 
