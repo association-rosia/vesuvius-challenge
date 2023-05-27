@@ -13,27 +13,19 @@ from src.models.unet3d import Unet3d
 
 
 class LightningVesuvius(pl.LightningModule):
-    def __init__(
-        self,
-        model_name,
-        model_parameters,
-        learning_rate=0.0001,
-        scheduler_patience=6,
-        bce_weight=1,
-        f05score_threshold=0.5,
-        val_mask_shapes=None,
-    ):
+    def __init__(self, model_name, model_params, learning_rate=0.0001, scheduler_patience=6, bce_weight=1,
+                 f05score_threshold=0.5, val_fragments_shape=None):
         super().__init__()
 
         # Model
         if model_name == 'UNet3D':
-            self.pytorch_model = Unet3d(**model_parameters).half()
+            self.pytorch_model = Unet3d(**model_params).half()
 
         # Training parameters
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = CombinedLoss(bce_weight=bce_weight)
-        self.metric = F05Score(val_mask_shapes, f05score_threshold)
+        self.metric = F05Score(val_fragments_shape, f05score_threshold)
         # self.submission = Submission(val_image_sizes)
 
     def forward(self, inputs):
@@ -96,7 +88,7 @@ if __name__ == '__main__':
     from src.data.make_dataset import DatasetVesuvius
     from torch.utils.data import DataLoader
     from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
-    from src.utils import get_dict_mask_shapes
+    from src.utils import get_fragments_shape
     import wandb
     from src.utils import get_device
 
@@ -157,12 +149,12 @@ if __name__ == '__main__':
         drop_last=True,
     )
 
-    val_mask_shapes = get_dict_mask_shapes(VAL_FRAGMENTS)
+    val_fragments_shape = get_fragments_shape(VAL_FRAGMENTS)
 
     model = LightningVesuvius(
         model_name='UNet3D',
-        model_parameters=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
-        val_mask_shapes=val_mask_shapes,
+        model_params=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
+        val_fragments_shape=val_fragments_shape,
     )
 
     trainer.fit(
