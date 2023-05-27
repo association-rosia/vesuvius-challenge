@@ -6,11 +6,11 @@ import torch
 import torchmetrics
 from torchmetrics.classification import BinaryFBetaScore
 
-from src.utils import reconstruct_images
+from src.utils import reconstruct_images, get_device
 
 
 class F05Score(torchmetrics.Metric):
-    def __init__(self, fragments_shape, threshold):
+    def __init__(self, fragments_shape, threshold, device):
         super().__init__()
         self.fragments = []
         self.bboxes = []
@@ -39,8 +39,9 @@ class F05Score(torchmetrics.Metric):
         reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape)
         reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape)
 
-        vector_preds = torch.FloatTensor()
-        vector_target = torch.FloatTensor()
+        device = get_device()
+        vector_preds = torch.FloatTensor().to(device)
+        vector_target = torch.FloatTensor().to(device)
 
         for fragment_id in self.fragments_shape.keys():
             view_preds = reconstructed_preds[fragment_id].view(-1)
