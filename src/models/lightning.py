@@ -109,7 +109,7 @@ if __name__ == '__main__':
     device = get_device()
 
     wandb.init(
-        project='vesuvius-challenge-ink-detection', group='test', entity='winged-bull'
+        project='vesuvius-challenge-ink-detection', group='test', entity='rosia-lab'
     )
 
     checkpoint_callback = ModelCheckpoint(

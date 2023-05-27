@@ -116,7 +116,7 @@ if __name__ == '__main__':
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
-            entity='winged-bull',
+            entity='rosia-lab',
             group='test',
             config=dict(
                 batch_size=16,
@@ -130,6 +130,6 @@ if __name__ == '__main__':
             ),
         )
     else:
-        wandb.init(project='vesuvius-challenge-ink-detection', entity='winged-bull')
+        wandb.init(project='vesuvius-challenge-ink-detection', entity='rosia-lab')
 
     main()
