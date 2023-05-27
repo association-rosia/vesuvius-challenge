@@ -115,6 +115,7 @@ class DatasetVesuvius(Dataset):
                 'mask': torch.from_numpy(mask_pad).to(self.device),
                 'image': torch.from_numpy(image_pad).to(self.device)
             }
+        print('\n')
 
         return data, items
 
@@ -158,7 +159,6 @@ if __name__ == '__main__':
                                   drop_last=True,
                                   pin_memory=True)
 
-    print('\n')
     for fragment, bbox, mask, image in train_dataloader:
         print(train_dataset.slices)
         print(fragment)
