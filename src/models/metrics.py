@@ -40,7 +40,7 @@ class F05Score(torchmetrics.Metric):
         reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape)
 
         device = get_device()
-        vector_preds = torch.FloatTensor().to(device)
+        vector_preds = torch.HalfTensor().to(device)
         vector_target = torch.FloatTensor().to(device)
 
         for fragment_id in self.fragments_shape.keys():
@@ -49,8 +49,8 @@ class F05Score(torchmetrics.Metric):
             view_target = reconstructed_target[fragment_id].view(-1)
             vector_target = torch.cat((view_target, vector_target), dim=0)
 
-        preds = preds.view(-1).type(torch.FloatTensor)
-        target = target.view(-1).type(torch.FloatTensor)
+        preds = preds.view(-1)
+        target = torch.where(target.view(-1) > 0.5, 1.0, 0.0)
 
         # Calculate F0.5 score between sub images and sub label target
         sub_f05_score = self.f05score(preds, target)
