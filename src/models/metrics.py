@@ -40,8 +40,8 @@ class F05Score(torchmetrics.Metric):
         reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape)
 
         device = get_device()
-        vector_preds = torch.HalfTensor().to(device)
-        vector_target = torch.HalfTensor().to(device)
+        vector_preds = torch.BFloat16Tensor().to(device)
+        vector_target = torch.BFloat16Tensor().to(device)
 
         for fragment_id in self.fragments_shape.keys():
             view_preds = reconstructed_preds[fragment_id].view(-1)

@@ -19,7 +19,7 @@ class LightningVesuvius(pl.LightningModule):
 
         # Model
         if model_name == 'UNet3D':
-            self.pytorch_model = Unet3d(**model_params).half()
+            self.pytorch_model = Unet3d(**model_params)
 
         # Training parameters
         self.learning_rate = learning_rate
@@ -34,9 +34,10 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
-
-        # Forward pass
         outputs = self.forward(images)
+        print()
+        print(outputs)
+        print()
 
         loss = self.criterion(outputs, masks)
         self.log('train/loss', loss, on_step=False, on_epoch=True)
@@ -45,14 +46,14 @@ class LightningVesuvius(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
-
-        # Forward pass
         outputs = self.forward(images)
+        print()
+        print(outputs)
+        print()
+        self.metric.update(fragments, bboxes, masks, outputs)
+
         loss = self.criterion(outputs, masks)
         self.log('val/loss', loss, on_step=False, on_epoch=True)
-
-        # Update the evaluation metric
-        self.metric.update(fragments, bboxes, masks, outputs)
 
         return {'loss', loss}
 
@@ -69,9 +70,7 @@ class LightningVesuvius(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
-        scheduler = ReduceLROnPlateau(
-            optimizer=optimizer, patience=self.scheduler_patience, verbose=True
-        )
+        scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=self.scheduler_patience, verbose=True)
         return {
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
