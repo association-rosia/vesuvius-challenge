@@ -3,6 +3,7 @@ import sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
+import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import pytorch_lightning as pl
@@ -28,6 +29,8 @@ class LightningVesuvius(pl.LightningModule):
         self.metric = F05Score(val_fragments_shape, f05score_threshold)
         # self.submission = Submission(val_image_sizes)
 
+        self.sigmoid = nn.Sigmoid()
+
     def forward(self, inputs):
         x = self.pytorch_model(inputs)
         return x
@@ -35,9 +38,6 @@ class LightningVesuvius(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
         outputs = self.forward(images)
-        print()
-        print(outputs)
-        print()
 
         loss = self.criterion(outputs, masks)
         self.log('train/loss', loss, on_step=False, on_epoch=True)
@@ -47,21 +47,22 @@ class LightningVesuvius(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
         outputs = self.forward(images)
-        print()
-        print(outputs)
-        print()
-        self.metric.update(fragments, bboxes, masks, outputs)
 
         loss = self.criterion(outputs, masks)
         self.log('val/loss', loss, on_step=False, on_epoch=True)
+
+        outputs = self.sigmoid(outputs)
+        self.metric.update(fragments, bboxes, masks, outputs)
 
         return {'loss', loss}
 
     def on_validation_epoch_end(self) -> None:
         # evaluate model on the validation dataset
         f05_score, sub_f05_score = self.metric.compute()
+
         # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
         metrics = {'val/F05Score': f05_score, 'val/SubF05Score': sub_f05_score}
+
         # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
         self.log_dict(metrics, on_step=False, on_epoch=True)
         self.metric.reset()
