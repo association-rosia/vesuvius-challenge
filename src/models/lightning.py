@@ -33,7 +33,7 @@ class LightningVesuvius(pl.LightningModule):
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = CombinedLoss(bce_weight=bce_weight)
-        self.metric = F05Score(val_mask_shapes, f05score_threshold).to(self.device)
+        self.metric = F05Score(val_mask_shapes, f05score_threshold)
         # self.submission = Submission(val_image_sizes)
 
     def forward(self, inputs):
