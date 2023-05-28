@@ -80,7 +80,6 @@ def get_model():
         learning_rate=wandb.config.learning_rate,
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
-        f05score_threshold=wandb.config.f05score_threshold,
         val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE),
     )
 
@@ -90,10 +89,10 @@ def get_model():
 def get_trainer():
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
-        monitor='val/F05Score',
-        mode='max',
+        monitor='val/loss',
+        mode='min',
         dirpath=MODELS_DIR,
-        filename='{val/F05Score:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
+        filename='{val/loss:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
     )
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
@@ -125,8 +124,7 @@ if __name__ == '__main__':
                 bce_weight=1,
                 scheduler_patience=3,
                 learning_rate=0.0001,
-                epochs=3,
-                f05score_threshold=0.5,
+                epochs=20,
             ),
         )
     else:
