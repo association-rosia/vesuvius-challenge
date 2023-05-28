@@ -28,7 +28,6 @@ class LightningVesuvius(pl.LightningModule):
         self.criterion = CombinedLoss(bce_weight=bce_weight)
         self.metric = F05Score(val_fragments_shape, f05score_threshold)
         # self.submission = Submission(val_image_sizes)
-
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, inputs):
@@ -37,6 +36,7 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
+        print('\n', masks.dtype, images.dtype, '\n')
         outputs = self.forward(images)
 
         loss = self.criterion(outputs, masks)
@@ -46,6 +46,7 @@ class LightningVesuvius(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
+        print('\n', masks.dtype, images.dtype, '\n')
         outputs = self.forward(images)
 
         loss = self.criterion(outputs, masks)
