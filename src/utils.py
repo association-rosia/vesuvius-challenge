@@ -1,59 +1,57 @@
 import os, sys
+
 sys.path.insert(0, os.pardir)
 
 from typing import List, Dict
 import torch
 
-from constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
+import cv2
+
+from constant import TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
 
 
-def reconstruct_images(
-    sub_masks: torch.Tensor,
-    bboxs: torch.Tensor,
-    fragment_ids: List,
-    mask_shapes: Dict,
-):
+def reconstruct_images(sub_masks: torch.Tensor, bboxes: torch.Tensor, fragments: List, fragments_shape: Dict):
     # Implementation of the reconstruction logic
     # Combine sub-masks to reconstruct the original images separately
     # Handle overlap by taking the mean of overlapping pixels
 
     reconstructed_images = {
-        fragment_id: torch.zeros(mask_size).to(device=sub_masks.device)
-        for fragment_id, mask_size in mask_shapes.items()
+        fragment: torch.zeros(mask_size).to(device=sub_masks.device)
+        for fragment, mask_size in fragments_shape.items()
     }
+
     count_map = {
-        fragment_id: torch.zeros(mask_size).to(device=sub_masks.device)
-        for fragment_id, mask_size in mask_shapes.items()
+        fragment: torch.zeros(mask_size).to(device=sub_masks.device)
+        for fragment, mask_size in fragments_shape.items()
     }
 
     for i in range(sub_masks.shape[0]):
-        reconstructed_images[fragment_ids[i]][
-            bboxs[i, 0] : bboxs[i, 2], bboxs[i, 1] : bboxs[i, 3]
-        ] += sub_masks[i, :, :]
-        count_map[fragment_ids[i]][
-            bboxs[i, 0] : bboxs[i, 2], bboxs[i, 1] : bboxs[i, 3]
-        ] += 1
+        x0, y0, x1, y1 = bboxes[i]
+        reconstructed_images[fragments[i]][x0:x1, y0:y1] += sub_masks[i, :, :]
+        count_map[fragments[i]][x0:x1, y0:y1] += 1
 
     # Divide by the count map to obtain the mean value
-    for key in mask_shapes.keys():
+    for key in fragments_shape.keys():
         reconstructed_images[key] /= count_map[key]
         reconstructed_images[key] = torch.nan_to_num(reconstructed_images[key], nan=0)
 
     return reconstructed_images
 
 
-def get_mask_shape():
-    return TILE_SIZE, TILE_SIZE
+def get_fragment_shape(fragment_dir):
+    mask_path = os.path.join(fragment_dir, 'inklabels.png')
+    return cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE).shape
 
 
-def get_dict_mask_shapes(list_fragment_ids):
-    return {fragment_id: get_mask_shape() for fragment_id in list_fragment_ids}
+def get_fragments_shape(fragments, test=False):
+    set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
+    return {fragment: get_fragment_shape(os.path.join(set_path, fragment)) for fragment in fragments}
 
 
 def get_device():
-    device = "cpu"
+    device = 'cpu'
     if torch.cuda.is_available():
-        device = "cuda"
+        device = 'cuda'
     elif torch.backends.mps.is_available():
-        device = "mps"
+        device = 'mps'
     return torch.device(device=device)

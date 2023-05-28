@@ -14,5 +14,5 @@ endif
 
 wandb:
 ifdef sweepid
-	wandb agent winged-bull/vesuvius-challenge-ink-detection/$(sweepid)
+	wandb agent rosia-lab/vesuvius-challenge-ink-detection/$(sweepid)
 endif

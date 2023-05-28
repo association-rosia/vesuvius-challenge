@@ -3,6 +3,7 @@ import sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
+import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import pytorch_lightning as pl
@@ -13,40 +14,30 @@ from src.models.unet3d import Unet3d
 
 
 class LightningVesuvius(pl.LightningModule):
-    def __init__(
-        self,
-        model_name,
-        model_parameters,
-        learning_rate=0.0001,
-        scheduler_patience=6,
-        bce_weight=1,
-        f05score_threshold=0.5,
-        val_mask_shapes=None,
-    ):
+    def __init__(self, model_name, model_params, learning_rate=0.0001, scheduler_patience=6, bce_weight=1,
+                 f05score_threshold=0.5, val_fragments_shape=None):
         super().__init__()
 
         # Model
         if model_name == 'UNet3D':
-            self.pytorch_model = Unet3d(**model_parameters)
+            self.pytorch_model = Unet3d(**model_params)
 
         # Training parameters
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = CombinedLoss(bce_weight=bce_weight)
-        self.metric = F05Score(val_mask_shapes, f05score_threshold)
+        self.metric = F05Score(val_fragments_shape, f05score_threshold)
         # self.submission = Submission(val_image_sizes)
+
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, inputs):
         x = self.pytorch_model(inputs)
         return x
 
     def training_step(self, batch, batch_idx):
-        _, _, masks, inputs = batch
-        # inputs = inputs.to(device)
-        # masks = masks.to(device)
-
-        # Forward pass
-        outputs = self.forward(inputs)
+        fragments, bboxes, masks, images = batch
+        outputs = self.forward(images)
 
         loss = self.criterion(outputs, masks)
         self.log('train/loss', loss, on_step=False, on_epoch=True)
@@ -54,39 +45,33 @@ class LightningVesuvius(pl.LightningModule):
         return {'loss': loss}
 
     def validation_step(self, batch, batch_idx):
-        fragments, bboxes, masks, inputs = batch
-        # inputs = inputs.to(device)
-        # masks = masks.to(device)
+        fragments, bboxes, masks, images = batch
+        outputs = self.forward(images)
 
-        # Forward pass
-        outputs = self.forward(inputs)
         loss = self.criterion(outputs, masks)
         self.log('val/loss', loss, on_step=False, on_epoch=True)
 
-        # Update the evaluation metric
-        self.metric.update(outputs, masks, bboxes, fragments)
+        outputs = self.sigmoid(outputs)
+        self.metric.update(fragments, bboxes, masks, outputs)
 
         return {'loss', loss}
 
     def on_validation_epoch_end(self) -> None:
         # evaluate model on the validation dataset
         f05_score, sub_f05_score = self.metric.compute()
-        # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
 
+        # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
         metrics = {'val/F05Score': f05_score, 'val/SubF05Score': sub_f05_score}
 
         # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
         self.log_dict(metrics, on_step=False, on_epoch=True)
-
         self.metric.reset()
 
         return metrics
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
-        scheduler = ReduceLROnPlateau(
-            optimizer=optimizer, patience=self.scheduler_patience, verbose=True
-        )
+        scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=self.scheduler_patience, verbose=True)
         return {
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
@@ -100,14 +85,14 @@ if __name__ == '__main__':
     from src.data.make_dataset import DatasetVesuvius
     from torch.utils.data import DataLoader
     from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
-    from src.utils import get_dict_mask_shapes
+    from src.utils import get_fragments_shape
     import wandb
     from src.utils import get_device
 
     device = get_device()
 
     wandb.init(
-        project='vesuvius-challenge-ink-detection', group='test', entity='winged-bull'
+        project='vesuvius-challenge-ink-detection', group='test', entity='rosia-lab'
     )
 
     checkpoint_callback = ModelCheckpoint(
@@ -161,12 +146,12 @@ if __name__ == '__main__':
         drop_last=True,
     )
 
-    val_mask_shapes = get_dict_mask_shapes(VAL_FRAGMENTS)
+    val_fragments_shape = get_fragments_shape(VAL_FRAGMENTS)
 
     model = LightningVesuvius(
         model_name='UNet3D',
-        model_parameters=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
-        val_mask_shapes=val_mask_shapes,
+        model_params=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
+        val_fragments_shape=val_fragments_shape,
     )
 
     trainer.fit(

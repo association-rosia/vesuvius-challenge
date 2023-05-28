@@ -3,8 +3,6 @@ import os, sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
-import argparse
-
 import torch
 from torch.utils.data import DataLoader
 
@@ -14,7 +12,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from src.data.make_dataset import DatasetVesuvius
 from src.models.lightning import LightningVesuvius
-from src.utils import get_dict_mask_shapes, get_device
+from src.utils import get_fragments_shape, get_device
 
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE, Z_DIM
 
@@ -55,6 +53,8 @@ def main():
         drop_last=True,
     )
 
+    print('\n')
+
     trainer = get_trainer()
 
     trainer.fit(
@@ -65,23 +65,23 @@ def main():
 
 
 def get_model():
-    model_parameters = dict()
+    model_params = dict()
 
     if wandb.config.model_name == 'UNet3D':
         num_block = wandb.config.num_block
-        model_parameters = dict(
+        model_params = dict(
             list_channels=[1] + [32 * 2 ** i for i in range(num_block)],
             inputs_size=TILE_SIZE,
         )
 
     lightning_model = LightningVesuvius(
         model_name=wandb.config.model_name,
-        model_parameters=model_parameters,
+        model_params=model_params,
         learning_rate=wandb.config.learning_rate,
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
         f05score_threshold=wandb.config.f05score_threshold,
-        val_mask_shapes=get_dict_mask_shapes(VAL_FRAGMENTS),
+        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS),
     )
 
     return lightning_model
@@ -105,6 +105,7 @@ def get_trainer():
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
+        precision='16-mixed',
     )
 
     return trainer
@@ -115,7 +116,7 @@ if __name__ == '__main__':
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
-            entity='winged-bull',
+            entity='rosia-lab',
             group='test',
             config=dict(
                 batch_size=16,
@@ -129,6 +130,6 @@ if __name__ == '__main__':
             ),
         )
     else:
-        wandb.init(project='vesuvius-challenge-ink-detection', entity='winged-bull')
+        wandb.init(project='vesuvius-challenge-ink-detection', entity='rosia-lab')
 
     main()

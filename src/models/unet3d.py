@@ -102,16 +102,16 @@ class SegmentationHead(nn.Module):
 
         self.outputs2d = nn.AdaptiveMaxPool3d((out_channels, inputs_size, inputs_size))
 
-        self.sigmoid = nn.Sigmoid()
+        # self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         # 3D outputs
         x = self.outputs3d(x)
 
         # 2D outputs
-        x = self.outputs2d(x)
+        outputs = self.outputs2d(x)
 
-        outputs = self.sigmoid(x)
+        # outputs = self.sigmoid(x)
 
         return outputs
 
@@ -129,23 +129,20 @@ class Unet3d(nn.Module):
         )
 
     def forward(self, x):
-        x = torch.unsqueeze(x, 1)
-
         # Encoder
         x, list_skips = self.encoder(x)
 
-        # Botteneck
+        # Bottleneck
         x = self.bottleneck(x)
 
         # Decoder
         x = self.decoder(x, list_skips)
 
-        # Segmenter Head
+        # Segmentation Head
         x = self.segmenter(x)
 
-        # * For Torch 2.0: torch.squeeze(x, (1, 2))
-        x = torch.squeeze(x, 2)
-        x = torch.squeeze(x, 1)
+        # torch.squeeze(x, (1, 2)) using torch 2.0
+        x = torch.squeeze(torch.squeeze(x, 2), 1)
 
         return x
 
@@ -160,5 +157,5 @@ if __name__ == "__main__":
     from constant import TILE_SIZE
 
     model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
-    inputs = torch.randn((8, 8, 256, 256))
-    print(model(inputs).shape)
+    inputs = torch.randn((8, 1, 8, 256, 256))
+    print(model(inputs))
