@@ -89,10 +89,10 @@ def get_model():
 def get_trainer():
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
-        monitor='val/F05Score',
-        mode='max',
+        monitor='val/loss',
+        mode='min',
         dirpath=MODELS_DIR,
-        filename='{val/F05Score:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
+        filename='{val/loss:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
     )
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
