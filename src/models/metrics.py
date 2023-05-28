@@ -63,7 +63,7 @@ class F05Score(torchmetrics.Metric):
         best_f05_score = -1
         
         for threshold in np.arange(0.1, 1, 0.1):
-            f05score = BinaryFBetaScore(0.5, threshold)
+            f05score = BinaryFBetaScore(0.5, threshold).to(device=device)
             
             sub_f05_score = f05score(preds, target)
             if best_sub_f05_threshold < sub_f05_score:
