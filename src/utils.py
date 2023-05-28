@@ -1,16 +1,13 @@
-import os, sys
-
+import os
+import sys
 sys.path.insert(0, os.pardir)
 
-from typing import List, Dict
 import torch
-
 import cv2
-
 from constant import TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
 
 
-def reconstruct_images(sub_masks: torch.Tensor, bboxes: torch.Tensor, fragments: List, fragments_shape: Dict):
+def reconstruct_images(sub_masks, bboxes, fragments, fragments_shape):
     # Implementation of the reconstruction logic
     # Combine sub-masks to reconstruct the original images separately
     # Handle overlap by taking the mean of overlapping pixels
@@ -34,6 +31,8 @@ def reconstruct_images(sub_masks: torch.Tensor, bboxes: torch.Tensor, fragments:
     for key in fragments_shape.keys():
         reconstructed_images[key] /= count_map[key]
         reconstructed_images[key] = torch.nan_to_num(reconstructed_images[key], nan=0)
+        # TODO: remove padding
+        # TODO: remove white out of fragment mask
 
     return reconstructed_images
 
