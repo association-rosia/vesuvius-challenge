@@ -36,7 +36,6 @@ class LightningVesuvius(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
-        print('\n', masks.dtype, images.dtype, '\n')
         outputs = self.forward(images)
 
         loss = self.criterion(outputs, masks)
@@ -46,7 +45,6 @@ class LightningVesuvius(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
-        print('\n', masks.dtype, images.dtype, '\n')
         outputs = self.forward(images)
 
         loss = self.criterion(outputs, masks)
