@@ -15,7 +15,7 @@ from src.models.unet3d import Unet3d
 
 class LightningVesuvius(pl.LightningModule):
     def __init__(self, model_name, model_params, learning_rate=0.0001, scheduler_patience=6, bce_weight=1,
-                 f05score_threshold=0.5, val_fragments_shape=None):
+                 val_fragments_shape=None):
         super().__init__()
 
         # Model
@@ -26,7 +26,7 @@ class LightningVesuvius(pl.LightningModule):
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = CombinedLoss(bce_weight=bce_weight)
-        self.metric = F05Score(val_fragments_shape, f05score_threshold)
+        self.metric = F05Score(val_fragments_shape)
         # self.submission = Submission(val_image_sizes)
         self.sigmoid = nn.Sigmoid()
 
