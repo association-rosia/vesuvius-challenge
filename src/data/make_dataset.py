@@ -85,6 +85,7 @@ class DatasetVesuvius(Dataset):
 
         padding.insert(0, (0, 0))
         image_pad = np.pad(image, padding)
+        print('\n\n', padding, '\n')
 
         return image_pad
 
