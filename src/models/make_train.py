@@ -125,8 +125,7 @@ if __name__ == '__main__':
                 bce_weight=1,
                 scheduler_patience=3,
                 learning_rate=0.0001,
-                epochs=3,
-                f05score_threshold=0.5,
+                epochs=20,
             ),
         )
     else:

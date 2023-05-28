@@ -35,7 +35,7 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
-        fragments, bboxes, masks, images = batch
+        _, _, masks, images = batch
         outputs = self.forward(images)
 
         loss = self.criterion(outputs, masks)
@@ -57,10 +57,10 @@ class LightningVesuvius(pl.LightningModule):
 
     def on_validation_epoch_end(self) -> None:
         # evaluate model on the validation dataset
-        f05_score, sub_f05_score = self.metric.compute()
+        f05_threshold, f05_score, sub_f05_threshold, sub_f05_score = self.metric.compute()
 
         # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
-        metrics = {'val/F05Score': f05_score, 'val/SubF05Score': sub_f05_score}
+        metrics = {'val/F05Threshold': f05_threshold, 'val/F05Score': f05_score, 'val/SubF05Threshold': sub_f05_threshold, 'val/SubF05Score': sub_f05_score}
 
         # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
         self.log_dict(metrics, on_step=False, on_epoch=True)
