@@ -145,7 +145,7 @@ if __name__ == '__main__':
         drop_last=True,
     )
 
-    val_fragments_shape = get_fragments_shape(VAL_FRAGMENTS)
+    val_fragments_shape = get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)
 
     model = LightningVesuvius(
         model_name='UNet3D',

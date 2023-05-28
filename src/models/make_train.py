@@ -81,7 +81,7 @@ def get_model():
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
         f05score_threshold=wandb.config.f05score_threshold,
-        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS),
+        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE),
     )
 
     return lightning_model

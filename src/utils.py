@@ -38,14 +38,17 @@ def reconstruct_images(sub_masks: torch.Tensor, bboxes: torch.Tensor, fragments:
     return reconstructed_images
 
 
-def get_fragment_shape(fragment_dir):
+def get_fragment_shape(fragment_dir, tile_size):
     mask_path = os.path.join(fragment_dir, 'inklabels.png')
-    return cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE).shape
+    mask_shape = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE).shape
+    pad = tile_size // 2
+    shape_pad = (mask_shape[0] + pad, mask_shape[1] + pad)
+    return shape_pad
 
 
-def get_fragments_shape(fragments, test=False):
+def get_fragments_shape(fragments, tile_size, test=False):
     set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
-    return {fragment: get_fragment_shape(os.path.join(set_path, fragment)) for fragment in fragments}
+    return {fragment: get_fragment_shape(os.path.join(set_path, fragment), tile_size) for fragment in fragments}
 
 
 def get_device():
