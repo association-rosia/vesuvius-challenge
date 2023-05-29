@@ -8,24 +8,29 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import pytorch_lightning as pl
 
-from src.models.losses import CombinedLoss
+from src.models.losses import BCEDiceLoss
 from src.models.metrics import F05Score
 from src.models.unet3d import Unet3d
 
 
 class LightningVesuvius(pl.LightningModule):
-    def __init__(self, model_name, model_params, learning_rate=0.0001, scheduler_patience=6, bce_weight=1,
-                 f05score_threshold=0.5, val_fragments_shape=None):
+    def __init__(self,
+                 model_name,
+                 model_params,
+                 learning_rate=0.0001,
+                 scheduler_patience=6,
+                 bce_weight=1,
+                 f05score_threshold=0.5,
+                 val_fragments_shape=None):
         super().__init__()
 
         # Model
         if model_name == 'UNet3D':
             self.pytorch_model = Unet3d(**model_params)
 
-        # Training parameters
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
-        self.criterion = CombinedLoss(bce_weight=bce_weight)
+        self.criterion = BCEDiceLoss(bce_weight=bce_weight)
         self.metric = F05Score(val_fragments_shape, f05score_threshold)
         # self.submission = Submission(val_image_sizes)
         self.sigmoid = nn.Sigmoid()
@@ -71,11 +76,8 @@ class LightningVesuvius(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
         scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=self.scheduler_patience, verbose=True)
-        return {
-            'optimizer': optimizer,
-            'lr_scheduler': scheduler,
-            'monitor': 'val/loss',
-        }
+
+        return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val/loss'}
 
 
 if __name__ == '__main__':

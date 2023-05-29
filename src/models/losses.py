@@ -2,9 +2,9 @@ import torch
 from torch import nn
 
 
-class CombinedLoss(nn.Module):
+class BCEDiceLoss(nn.Module):
     def __init__(self, bce_weight=None, dice_weight=None):
-        super(CombinedLoss, self).__init__()
+        super(BCEDiceLoss, self).__init__()
 
         if not ((dice_weight is None) ^ (bce_weight is None)):
             raise TypeError(
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     dice_loss = DiceLoss()
     bce_loss = nn.BCELoss()
-    combined_loss = CombinedLoss(bce_weight)
+    combined_loss = BCEDiceLoss(bce_weight)
 
     prediction = torch.randint(2, size=(8, 256, 256)).to(dtype=torch.float32)
     label = torch.randint(2, size=(8, 256, 256)).to(dtype=torch.float32)

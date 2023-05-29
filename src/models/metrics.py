@@ -7,6 +7,7 @@ import torchmetrics
 from torchmetrics.classification import BinaryFBetaScore
 
 from src.utils import reconstruct_images, get_device
+from constant import TILE_SIZE
 
 
 class F05Score(torchmetrics.Metric):
@@ -36,8 +37,9 @@ class F05Score(torchmetrics.Metric):
         bboxes = torch.cat(self.bboxes, dim=0)
 
         # Reconstruct the original images from sub-target
-        reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape)
-        reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape)
+        padding = TILE_SIZE // 4
+        reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape, padding)
+        reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape, padding)
 
         device = get_device()
         vector_preds = torch.HalfTensor().to(device)
@@ -65,6 +67,3 @@ class F05Score(torchmetrics.Metric):
         self.bboxes = []
         self.target = []
         self.preds = []
-
-
-
