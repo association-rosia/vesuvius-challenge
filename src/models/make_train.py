@@ -18,8 +18,8 @@ from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE, Z_DI
 import wandb
 
 
-def main(config):
-    model = get_model(config)
+def main():
+    model = get_model()
     train_dataloader, val_dataloader = get_dataloaders()
     print('\n')
     trainer = get_trainer()
@@ -30,20 +30,20 @@ def main(config):
     )
 
 
-def get_model(config):
-    if config.model_name == 'UNet3D':
+def get_model():
+    if wandb.config.model_name == 'UNet3D':
         model_params = {
-            'nb_blocks': config.nb_blocks,
-            'inputs_size': config.tile_size,
+            'nb_blocks': wandb.config.nb_blocks,
+            'inputs_size': wandb.config.tile_size,
         }
 
     lightning_model = LightningVesuvius(
-        model_name=config.model_name,
+        model_name=wandb.config.model_name,
         model_params=model_params,
-        learning_rate=config.learning_rate,
-        scheduler_patience=config.scheduler_patience,
-        bce_weight=config.bce_weight,
-        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, config.tile_size),
+        learning_rate=wandb.config.learning_rate,
+        scheduler_patience=wandb.config.scheduler_patience,
+        bce_weight=wandb.config.bce_weight,
+        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, wandb.config.tile_size),
     )
 
     return lightning_model
@@ -105,9 +105,9 @@ def get_trainer():
 
     # init the trainer
     trainer = pl.Trainer(
-        accelerator='cpu',
+        accelerator='gpu',
         num_sanity_val_steps=0,
-        # devices=2,
+        devices=1,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
@@ -126,16 +126,16 @@ if __name__ == '__main__':
             group='test',
             config={
                 'batch_size': 2,
-                    'model_name': 'UNet3D',
-                    'nb_blocks': 1,
-                    'bce_weight': 0.5,
-                    'scheduler_patience': 5,
-                    'learning_rate': 0.0001,
-                    'epochs': 20,
-                    'tile_size': TILE_SIZE
+                'model_name': 'UNet3D',
+                'nb_blocks': 1,
+                'bce_weight': 0.5,
+                'scheduler_patience': 5,
+                'learning_rate': 0.0001,
+                'epochs': 20,
+                'tile_size': TILE_SIZE
             },
         )
     else:
         wandb.init(project='vesuvius-challenge-ink-detection', entity='rosia-lab')
 
-    main(wandb.config)
+    main()
