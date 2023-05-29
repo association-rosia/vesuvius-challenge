@@ -6,6 +6,8 @@ import torch
 import torchmetrics
 from torchmetrics.classification import BinaryFBetaScore
 
+import numpy as np
+
 from src.utils import reconstruct_images, get_device
 from constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH
 
@@ -13,7 +15,7 @@ import cv2
 
 
 class F05Score(torchmetrics.Metric):
-    def __init__(self, fragments_shape, threshold):
+    def __init__(self, fragments_shape):
         super().__init__()
         self.fragments = []
         self.bboxes = []
@@ -25,7 +27,6 @@ class F05Score(torchmetrics.Metric):
         self.add_state('preds', default=[], dist_reduce_fx=None)
 
         self.fragments_shape = fragments_shape
-        self.f05score = BinaryFBetaScore(0.5, threshold)
 
     def update(self, fragments, bboxes, target, preds):
         self.fragments += fragments
@@ -61,13 +62,30 @@ class F05Score(torchmetrics.Metric):
         # Calculate F0.5 score between sub images and sub label target
         preds = preds.view(-1)
         target = torch.where(target.view(-1) > 0.5, 1, 0)
-        sub_f05_score = self.f05score(preds, target)
-
-        # Calculate F0.5 score between reconstructed images and label target
+        
         vector_target = torch.where(vector_target > 0.5, 1, 0)
-        f05_score = self.f05score(vector_preds, vector_target)
+        
+        best_sub_f05_threshold = -1
+        best_sub_f05_score = -1
+        
+        best_f05_threshold = -1
+        best_f05_score = -1
+        
+        for threshold in np.arange(0.1, 1, 0.1):
+            f05score = BinaryFBetaScore(0.5, threshold).to(device=device)
+            
+            sub_f05_score = f05score(preds, target)
+            if best_sub_f05_threshold < sub_f05_score:
+                best_sub_f05_threshold = threshold 
+                best_sub_f05_score = sub_f05_score
+    
+            f05_score = f05score(vector_preds, vector_target)
+            if best_f05_threshold < f05_score:
+                best_f05_threshold = threshold 
+                best_f05_score = f05_score
+    
 
-        return f05_score, sub_f05_score
+        return best_sub_f05_threshold, best_sub_f05_score, best_f05_threshold, best_f05_score
 
     def reset(self):
         self.fragments = []
