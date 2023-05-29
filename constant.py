@@ -7,7 +7,7 @@ TRAIN_FRAGMENTS = ['3'] # ['1', '2']
 VAL_FRAGMENTS = ['3']
 TEST_FRAGMENTS = ['a', 'b', 'c']
 
-Z_DIM = 10
+Z_DIM = 8
 TILE_SIZE = 256
 
 # KAGGLE DIRECTORIES
