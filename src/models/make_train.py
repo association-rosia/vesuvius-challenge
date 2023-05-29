@@ -68,7 +68,6 @@ def get_dataloaders():
         shuffle=True,
         drop_last=True,
         num_workers=4,
-        pin_memory=True
     )
 
     val_dataset = DatasetVesuvius(
@@ -86,7 +85,6 @@ def get_dataloaders():
         batch_size=wandb.config.batch_size,
         drop_last=True,
         num_workers=4,
-        pin_memory=True
     )
 
     return train_dataloader, val_dataloader
