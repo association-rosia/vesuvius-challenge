@@ -3,7 +3,6 @@ import os, sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
-import torch
 from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
@@ -118,7 +117,7 @@ if __name__ == '__main__':
             config=dict(
                 batch_size=8,
                 model_name='UNet3D',
-                nb_blocks=2,
+                nb_blocks=1,
                 bce_weight=0.5,
                 scheduler_patience=5,
                 learning_rate=0.0001,
