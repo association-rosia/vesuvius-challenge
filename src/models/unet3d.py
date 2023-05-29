@@ -152,7 +152,7 @@ if __name__ == "__main__":
 
     from constant import TILE_SIZE
 
-    model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(device='gpu')
+    model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(device='cuda')
     print(model)
-    inputs = torch.randn((8, 1, 8, 256, 256))
+    inputs = torch.randn((8, 1, 8, 256, 256)).to(device='cuda')
     print(model(inputs))
