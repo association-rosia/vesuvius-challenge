@@ -51,34 +51,44 @@ def get_model():
 
 def get_dataloaders():
     device = get_device()
+
+    train_dataset = DatasetVesuvius(
+        fragments=TRAIN_FRAGMENTS,
+        tile_size=wandb.config.tile_size,
+        num_slices=Z_DIM,
+        random_slices=False,
+        selection_thr=0.01,
+        augmentation=True,
+        test=False,
+        device=device)
+
     train_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
-                                tile_size=wandb.config.tile_size,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
+        dataset=train_dataset,
         batch_size=wandb.config.batch_size,
         shuffle=True,
         drop_last=True,
+        num_workers=4,
+        pin_memory=True
     )
 
+    val_dataset = DatasetVesuvius(
+        fragments=VAL_FRAGMENTS,
+        tile_size=wandb.config.tile_size,
+        num_slices=Z_DIM,
+        random_slices=False,
+        selection_thr=0.01,
+        augmentation=True,
+        test=False,
+        device=device)
+
     val_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
-                                tile_size=wandb.config.tile_size,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
+        dataset=val_dataset,
         batch_size=wandb.config.batch_size,
-        shuffle=False,
         drop_last=True,
+        num_workers=4,
+        pin_memory=True
     )
-    
+
     return train_dataloader, val_dataloader
 
 
@@ -95,13 +105,14 @@ def get_trainer():
 
     # init the trainer
     trainer = pl.Trainer(
-        accelerator='cpu',
+        accelerator='gpu',
         num_sanity_val_steps=0,
-        # devices=1,
+        devices=2,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
         precision=16,
+        profile=True
     )
 
     return trainer
