@@ -29,7 +29,7 @@ def reconstruct_images(tiles, bboxes, fragments, fragments_shape, padding):
 
     # Divide by the count map to obtain the mean value
     for key in fragments_shape.keys():
-        print(key, fragments[key], fragments)
+        print(key, fragments)
         reconstructed_image = reconstructed_images[key] / count_map[key]
         reconstructed_image = torch.nan_to_num(reconstructed_image, nan=0)
 
