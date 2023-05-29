@@ -34,6 +34,7 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
+        print('\n0')
         _, _, masks, images = batch
         print('\n1')
         outputs = self.forward(images)
