@@ -97,6 +97,7 @@ def get_trainer():
     # init the trainer
     trainer = pl.Trainer(
         accelerator='cpu',
+        num_sanity_val_steps=0,
         # devices=1,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
