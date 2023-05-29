@@ -100,7 +100,7 @@ def get_trainer():
     # init the trainer
     trainer = pl.Trainer(
         accelerator='gpu',
-        devices=1,
+        devices=2,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
@@ -116,13 +116,13 @@ if __name__ == '__main__':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
             entity='rosia-lab',
-            group='test',
+            group='UNet3D',
             config=dict(
                 batch_size=16,
                 model_name='UNet3D',
                 num_block=2,
-                bce_weight=1,
-                scheduler_patience=3,
+                bce_weight=0.5,
+                scheduler_patience=5,
                 learning_rate=0.0001,
                 epochs=20,
             ),

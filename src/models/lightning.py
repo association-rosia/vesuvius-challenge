@@ -8,7 +8,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import pytorch_lightning as pl
 
-from src.models.losses import CombinedLoss
+from src.models.losses import BCEDiceLoss
 from src.models.metrics import F05Score
 from src.models.unet3d import Unet3d
 
@@ -25,7 +25,7 @@ class LightningVesuvius(pl.LightningModule):
         # Training parameters
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
-        self.criterion = CombinedLoss(bce_weight=bce_weight)
+        self.criterion = BCEDiceLoss(bce_weight=bce_weight)
         self.metric = F05Score(val_fragments_shape)
         # self.submission = Submission(val_image_sizes)
         self.sigmoid = nn.Sigmoid()
