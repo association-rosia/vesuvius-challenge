@@ -20,7 +20,7 @@ class LightningVesuvius(pl.LightningModule):
 
         # Model
         if model_name == 'UNet3D':
-            self.pytorch_model = Unet3d(**model_params).half()
+            self.pytorch_model = Unet3d(**model_params)
 
         # Training parameters
         self.learning_rate = learning_rate
