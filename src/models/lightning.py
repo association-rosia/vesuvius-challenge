@@ -22,7 +22,6 @@ class LightningVesuvius(pl.LightningModule):
         if model_name == 'UNet3D':
             self.pytorch_model = Unet3d(**model_params)
 
-        # Training parameters
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = BCEDiceLoss(bce_weight=bce_weight)
@@ -72,11 +71,8 @@ class LightningVesuvius(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
         scheduler = ReduceLROnPlateau(optimizer=optimizer, patience=self.scheduler_patience, verbose=True)
-        return {
-            'optimizer': optimizer,
-            'lr_scheduler': scheduler,
-            'monitor': 'val/loss',
-        }
+
+        return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val/loss'}
 
 
 if __name__ == '__main__':

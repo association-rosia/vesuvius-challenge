@@ -7,32 +7,36 @@ import cv2
 from constant import TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
 
 
-def reconstruct_images(sub_masks, bboxes, fragments, fragments_shape):
+def reconstruct_images(tiles, bboxes, fragments, fragments_shape, padding):
     # Implementation of the reconstruction logic
     # Combine sub-masks to reconstruct the original images separately
     # Handle overlap by taking the mean of overlapping pixels
 
     reconstructed_images = {
-        fragment: torch.zeros(mask_size).to(device=sub_masks.device)
+        fragment: torch.zeros(mask_size).to(device=tiles.device)
         for fragment, mask_size in fragments_shape.items()
     }
 
     count_map = {
-        fragment: torch.zeros(mask_size).to(device=sub_masks.device)
+        fragment: torch.zeros(mask_size).to(device=tiles.device)
         for fragment, mask_size in fragments_shape.items()
     }
 
-    for i in range(sub_masks.shape[0]):
+    for i in range(tiles.shape[0]):
         x0, y0, x1, y1 = bboxes[i]
-        reconstructed_images[fragments[i]][x0:x1, y0:y1] += sub_masks[i, :, :]
+        reconstructed_images[fragments[i]][x0:x1, y0:y1] += tiles[i, :, :]
         count_map[fragments[i]][x0:x1, y0:y1] += 1
 
     # Divide by the count map to obtain the mean value
     for key in fragments_shape.keys():
-        reconstructed_images[key] /= count_map[key]
-        reconstructed_images[key] = torch.nan_to_num(reconstructed_images[key], nan=0)
-        # TODO: remove padding
-        # TODO: remove white out of fragment mask
+        reconstructed_image = reconstructed_images[key] / count_map[key]
+        reconstructed_image = torch.nan_to_num(reconstructed_image, nan=0)
+
+        shape = reconstructed_image.shape
+        x0, y0, x1, y1 = padding, padding, shape[0] - padding, shape[1] - padding
+        reconstructed_image = reconstructed_image[x0:x1, y0:y1]
+
+        reconstructed_images[key] = reconstructed_image
 
     return reconstructed_images
 
