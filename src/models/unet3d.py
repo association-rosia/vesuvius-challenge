@@ -71,6 +71,7 @@ class DecoderBlock3d(nn.Module):
 
     def forward(self, x, skip):
         x = self.up(x)
+        print(x.shape, skip.shape)
         x = torch.cat([x, skip], dim=1)
         x = self.conv(x)
 

@@ -22,37 +22,11 @@ import wandb
 def main():
     # empty the GPU cache
     torch.cuda.empty_cache()
-    device = get_device()
+    
     model = get_model()
-
-    train_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
-                                tile_size=TILE_SIZE,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
-        batch_size=wandb.config.batch_size,
-        shuffle=True,
-        drop_last=True,
-    )
-
-    val_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
-                                tile_size=TILE_SIZE,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
-        batch_size=wandb.config.batch_size,
-        shuffle=False,
-        drop_last=True,
-    )
-
+    
+    train_dataloader, val_dataloader = get_dataloaders()
+    
     print('\n')
 
     trainer = get_trainer()
@@ -68,7 +42,7 @@ def get_model():
     if wandb.config.model_name == 'UNet3D':
         model_params = {
             'nb_blocks': wandb.config.nb_blocks,
-            'inputs_size': TILE_SIZE,
+            'inputs_size': wandb.config.tile_size,
         }
 
     lightning_model = LightningVesuvius(
@@ -77,10 +51,43 @@ def get_model():
         learning_rate=wandb.config.learning_rate,
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
-        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE),
+        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, wandb.config.tile_size),
     )
 
     return lightning_model
+
+
+def get_dataloaders():
+    device = get_device()
+    train_dataloader = DataLoader(
+        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
+                                tile_size=wandb.config.tile_size,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
+                                augmentation=True,
+                                test=False,
+                                device=device),
+        batch_size=wandb.config.batch_size,
+        shuffle=True,
+        drop_last=True,
+    )
+
+    val_dataloader = DataLoader(
+        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
+                                tile_size=wandb.config.tile_size,
+                                num_slices=Z_DIM,
+                                random_slices=False,
+                                selection_thr=0.01,
+                                augmentation=True,
+                                test=False,
+                                device=device),
+        batch_size=wandb.config.batch_size,
+        shuffle=False,
+        drop_last=True,
+    )
+    
+    return train_dataloader, val_dataloader
 
 
 def get_trainer():
@@ -122,6 +129,7 @@ if __name__ == '__main__':
                 scheduler_patience=5,
                 learning_rate=0.0001,
                 epochs=20,
+                tile_size=TILE_SIZE,
             ),
         )
     else:
