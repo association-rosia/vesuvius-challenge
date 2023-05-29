@@ -1,7 +1,6 @@
-import os, sys
-
-parent = os.path.abspath(os.path.curdir)
-sys.path.insert(1, parent)
+import os
+import sys
+sys.path.insert(1, os.path.abspath(os.path.curdir))
 
 from torch.utils.data import DataLoader
 
@@ -103,11 +102,10 @@ def get_trainer():
 
     # init the trainer
     trainer = pl.Trainer(
-        accelerator='cpu',
-        # devices=1,
+        accelerator='gpu',
+        devices=1,
         max_epochs=wandb.config.epochs,
-        callbacks=[lr_monitor],
-        # callbacks=[lr_monitor, checkpoint_callback],
+        callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
         precision='16-mixed',
         num_sanity_val_steps=0
