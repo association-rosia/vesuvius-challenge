@@ -103,8 +103,8 @@ def get_trainer():
 
     # init the trainer
     trainer = pl.Trainer(
-        accelerator='cpu',
-        # devices=1,
+        accelerator='gpu',
+        devices=1,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor],
         # callbacks=[lr_monitor, checkpoint_callback],
