@@ -117,7 +117,7 @@ if __name__ == '__main__':
             config=dict(
                 batch_size=16,
                 model_name='UNet3D',
-                nb_blocks=2,
+                nb_blocks=3,
                 bce_weight=0.5,
                 scheduler_patience=5,
                 learning_rate=0.0001,
