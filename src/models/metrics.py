@@ -54,12 +54,9 @@ class F05Score(torchmetrics.Metric):
             vector_preds = torch.cat((vector_preds, reconstructed_pred.view(-1)), dim=0)
 
             target_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragment_id, 'inklabels.png')
-            target = torch.from_numpy(cv2.imread(target_path, cv2.IMREAD_GRAYSCALE) / 255.0)
-            target = target.type(torch.HalfTensor).to(device)
-
-            print(vector_target, target)
-
-            vector_target = torch.cat((vector_target, target.view(-1)), dim=0)
+            loaded_target = torch.from_numpy(cv2.imread(target_path, cv2.IMREAD_GRAYSCALE) / 255.0)
+            loaded_target = loaded_target.type(torch.HalfTensor).to(device)
+            vector_target = torch.cat((vector_target, loaded_target.view(-1)), dim=0)
 
         # Calculate F0.5 score between sub images and sub label target
         preds = preds.view(-1)
