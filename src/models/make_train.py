@@ -20,17 +20,10 @@ import wandb
 
 
 def main():
-    # empty the GPU cache
-    torch.cuda.empty_cache()
-    
     model = get_model()
-    
     train_dataloader, val_dataloader = get_dataloaders()
-    
     print('\n')
-
     trainer = get_trainer()
-
     trainer.fit(
         model=model,
         train_dataloaders=train_dataloader,
