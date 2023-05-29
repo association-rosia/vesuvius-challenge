@@ -91,13 +91,13 @@ def get_dataloaders():
 
 
 def get_trainer():
-    checkpoint_callback = ModelCheckpoint(
-        save_top_k=1,
-        monitor='val/loss',
-        mode='min',
-        dirpath=MODELS_DIR,
-        filename='{val/loss:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
-    )
+    # checkpoint_callback = ModelCheckpoint(
+    #     save_top_k=1,
+    #     monitor='val/loss',
+    #     mode='min',
+    #     dirpath=MODELS_DIR,
+    #     filename='{val/loss:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
+    # )
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
 
@@ -107,7 +107,8 @@ def get_trainer():
         num_sanity_val_steps=0,
         devices=1,
         max_epochs=wandb.config.epochs,
-        callbacks=[lr_monitor, checkpoint_callback],
+        callbacks=[lr_monitor],
+        # callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
         precision=16
     )
