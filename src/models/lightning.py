@@ -35,6 +35,7 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
+        print(self.pytorch_model.device)
         _, _, masks, images = batch
         outputs = self.forward(images)
 
