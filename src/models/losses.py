@@ -3,7 +3,7 @@ from torch import nn
 
 
 class BCEDiceLoss(nn.Module):
-    def __init__(self, bce_weight=None, dice_weight=None):
+    def __init__(self, bce_weight=0.5, dice_weight=None):
         super(BCEDiceLoss, self).__init__()
 
         if not ((dice_weight is None) ^ (bce_weight is None)):
@@ -27,9 +27,9 @@ class BCEDiceLoss(nn.Module):
         dice_loss = self.dice_loss(predictions, targets)
 
         # Combine the losses using weighted sum
-        combined_loss = self.bce_weight * bce_loss + self.dice_weight * dice_loss
+        bce_dice_loss = self.bce_weight * bce_loss + self.dice_weight * dice_loss
 
-        return combined_loss
+        return bce_dice_loss
 
 
 class DiceLoss(nn.Module):

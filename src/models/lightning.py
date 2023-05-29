@@ -34,11 +34,15 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
+        print('\n1')
         _, _, masks, images = batch
+        print('\n2')
         outputs = self.forward(images)
+        print('\n3')
         loss = self.criterion(outputs, masks)
+        print('\n4')
         self.log('train/loss', loss, on_step=False, on_epoch=True)
-
+        print('\n5')
         return {'loss': loss}
 
     def validation_step(self, batch, batch_idx):
