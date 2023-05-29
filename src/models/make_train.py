@@ -65,14 +65,11 @@ def main():
 
 
 def get_model():
-    model_params = dict()
-
     if wandb.config.model_name == 'UNet3D':
-        num_block = wandb.config.num_block
-        model_params = dict(
-            list_channels=[1] + [32 * 2 ** i for i in range(num_block)],
-            inputs_size=TILE_SIZE,
-        )
+        model_params = {
+            'nb_blocks': wandb.config.nb_blocks,
+            'inputs_size': TILE_SIZE,
+        }
 
     lightning_model = LightningVesuvius(
         model_name=wandb.config.model_name,
@@ -116,11 +113,11 @@ if __name__ == '__main__':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
             entity='rosia-lab',
-            group='UNet3D',
+            group='test',
             config=dict(
                 batch_size=16,
                 model_name='UNet3D',
-                num_block=2,
+                nb_blocks=2,
                 bce_weight=0.5,
                 scheduler_patience=5,
                 learning_rate=0.0001,
