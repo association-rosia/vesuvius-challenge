@@ -3,11 +3,10 @@ from os import pardir
 from os import sep
 
 # VARIABLES
-TRAIN_FRAGMENTS = ['3']  # ['1', '2']
+TRAIN_FRAGMENTS = ['3'] # ['1', '2']
 VAL_FRAGMENTS = ['3']
 
-Z_START = 0
-Z_DIM = 10
+Z_DIM = 8
 TILE_SIZE = 256
 
 # KAGGLE DIRECTORIES

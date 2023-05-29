@@ -25,7 +25,7 @@ class LightningVesuvius(pl.LightningModule):
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
         self.criterion = BCEDiceLoss(bce_weight=bce_weight)
-        self.metric = F05Score(val_fragments_shape, f05score_threshold)
+        self.metric = F05Score(val_fragments_shape)
         # self.submission = Submission(val_image_sizes)
         self.sigmoid = nn.Sigmoid()
 
@@ -34,6 +34,7 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
+        print(next(self.pytorch_model.parameters()).is_cuda)
         _, _, masks, images = batch
         outputs = self.forward(images)
 
