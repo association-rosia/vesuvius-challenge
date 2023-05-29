@@ -4,15 +4,15 @@ from typing import List
 
 
 class ConvBlock3d(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels1, out_channels2):
         super().__init__()
 
-        self.conv1 = nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm3d(out_channels)
+        self.conv1 = nn.Conv3d(in_channels, out_channels1, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm3d(out_channels1)
 
         # * Uncomment if we get more gpu memory in the future
-        self.conv2 = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm3d(out_channels)
+        self.conv2 = nn.Conv3d(out_channels1, out_channels2, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm3d(out_channels2)
 
         self.relu = nn.ReLU()
 
@@ -28,10 +28,10 @@ class ConvBlock3d(nn.Module):
 
 
 class EncoderBlock3d(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels1, out_channels2):
         super().__init__()
 
-        self.conv = ConvBlock3d(in_channels, out_channels)
+        self.conv = ConvBlock3d(in_channels, out_channels1, out_channels2)
         self.pool = nn.MaxPool3d((2, 2, 2))
 
     def forward(self, x):
@@ -41,12 +41,14 @@ class EncoderBlock3d(nn.Module):
 
 
 class UNetEncoder3d(nn.Module):
-    def __init__(self, list_channels: List):
+    def __init__(self, nb_blocks: int):
         super().__init__()
-
+        
         self.encoderblocks = nn.ModuleList([])
-        for in_channels, out_channels in zip(list_channels[:-1], list_channels[1:]):
-            self.encoderblocks.append(EncoderBlock3d(in_channels, out_channels))
+        self.encoderblocks.append(EncoderBlock3d(1, 32, 64))
+        for num_block in range(1, nb_blocks):
+            in_channels, out_channels = 2**(5 + num_block), 2**(6 + num_block) # 2**(5 + 1) = 64
+            self.encoderblocks.append(EncoderBlock3d(in_channels, out_channels, out_channels))
             
     def forward(self, x):
         list_skips = []
@@ -59,13 +61,13 @@ class UNetEncoder3d(nn.Module):
 
 
 class DecoderBlock3d(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels1, out_channels2):
         super().__init__()
 
         self.up = nn.ConvTranspose3d(
-            in_channels, out_channels, kernel_size=2, stride=2, padding=0
+            in_channels, in_channels, kernel_size=2, stride=2, padding=0
         )
-        self.conv = ConvBlock3d(out_channels + out_channels, out_channels)
+        self.conv = ConvBlock3d(in_channels + out_channels1, out_channels1, out_channels2)
 
     def forward(self, x, skip):
         x = self.up(x)
@@ -76,14 +78,13 @@ class DecoderBlock3d(nn.Module):
 
 
 class UNetDecoder3d(nn.Module):
-    def __init__(self, list_channels: List):
+    def __init__(self, nb_blocks: int):
         super().__init__()
         
-        list_channels.reverse()
-        
         self.decoderblocks = nn.ModuleList([])
-        for in_channels, out_channels in zip(list_channels[:-1], list_channels[1:]):
-            self.decoderblocks.append(DecoderBlock3d(in_channels, out_channels))
+        for num_block in range(nb_blocks, 0, -1):
+            in_channels, out_channels = 2**(6 + num_block), 2**(5 + num_block) # 2**(5 + 1) = 64
+            self.decoderblocks.append(DecoderBlock3d(in_channels, out_channels, out_channels))
 
     def forward(self, x, list_skips: List):
         list_skips.reverse()
@@ -102,30 +103,26 @@ class SegmentationHead(nn.Module):
 
         self.outputs2d = nn.AdaptiveMaxPool3d((out_channels, inputs_size, inputs_size))
 
-        # self.sigmoid = nn.Sigmoid()
-
     def forward(self, x):
         # 3D outputs
         x = self.outputs3d(x)
 
         # 2D outputs
-        outputs = self.outputs2d(x)
+        x = self.outputs2d(x)
 
-        # outputs = self.sigmoid(x)
-
-        return outputs
+        return x
 
 
 class Unet3d(nn.Module):
-    def __init__(self, list_channels, inputs_size):
+    def __init__(self, nb_blocks, inputs_size):
         super().__init__()
 
         # Architecture
-        self.encoder = UNetEncoder3d(list_channels[:-1])
-        self.bottleneck = ConvBlock3d(*list_channels[-2:])
-        self.decoder = UNetDecoder3d(list_channels[1:])
+        self.encoder = UNetEncoder3d(nb_blocks=nb_blocks)
+        self.bottleneck = ConvBlock3d(2**(5 + nb_blocks), 2**(5 + nb_blocks), 2**(6 + nb_blocks))
+        self.decoder = UNetDecoder3d(nb_blocks=nb_blocks)
         self.segmenter = SegmentationHead(
-            list_channels[1], list_channels[0], inputs_size
+            64, 1, inputs_size
         )
 
     def forward(self, x):
@@ -141,8 +138,7 @@ class Unet3d(nn.Module):
         # Segmentation Head
         x = self.segmenter(x)
 
-        # torch.squeeze(x, (1, 2)) using torch 2.0
-        x = torch.squeeze(torch.squeeze(x, 2), 1)
+        x = torch.squeeze(x, (1, 2))
 
         return x
 
@@ -156,6 +152,7 @@ if __name__ == "__main__":
 
     from constant import TILE_SIZE
 
-    model = Unet3d(list_channels=[1, 32, 64], inputs_size=TILE_SIZE)
+    model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE)
+    print(model)
     inputs = torch.randn((8, 1, 8, 256, 256))
     print(model(inputs))
