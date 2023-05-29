@@ -29,7 +29,6 @@ def reconstruct_images(tiles, bboxes, fragments, fragments_shape, padding):
 
     # Divide by the count map to obtain the mean value
     for key in fragments_shape.keys():
-        print(key, fragments)
         reconstructed_image = reconstructed_images[key] / count_map[key]
         reconstructed_image = torch.nan_to_num(reconstructed_image, nan=0)
 
@@ -37,9 +36,6 @@ def reconstruct_images(tiles, bboxes, fragments, fragments_shape, padding):
         x0, y0, x1, y1 = padding, padding, shape[0] - padding, shape[1] - padding
         reconstructed_image = reconstructed_image[x0:x1, y0:y1]
 
-        mask_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragments[key], 'mask.png')
-        mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-        reconstructed_image = torch.where(mask > 0.5, reconstructed_image, 0)
         reconstructed_images[key] = reconstructed_image
 
     return reconstructed_images

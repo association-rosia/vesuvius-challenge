@@ -7,7 +7,9 @@ import torchmetrics
 from torchmetrics.classification import BinaryFBetaScore
 
 from src.utils import reconstruct_images, get_device
-from constant import TILE_SIZE
+from constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH
+
+import cv2
 
 
 class F05Score(torchmetrics.Metric):
@@ -39,17 +41,22 @@ class F05Score(torchmetrics.Metric):
         # Reconstruct the original images from sub-target
         padding = TILE_SIZE // 4
         reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape, padding)
-        reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape, padding)
+        # reconstructed_target = reconstruct_images(target, bboxes, self.fragments, self.fragments_shape, padding)
 
         device = get_device()
         vector_preds = torch.HalfTensor().to(device)
         vector_target = torch.HalfTensor().to(device)
 
         for fragment_id in self.fragments_shape.keys():
-            view_preds = reconstructed_preds[fragment_id].view(-1)
-            vector_preds = torch.cat((view_preds, vector_preds), dim=0)
-            view_target = reconstructed_target[fragment_id].view(-1)
-            vector_target = torch.cat((view_target, vector_target), dim=0)
+            mask_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragment_id, 'mask.png')
+            mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            print(mask.shape, torch.min(mask), torch.max(mask), mask)
+            reconstructed_pred = torch.where(mask == 255, reconstructed_preds[fragment_id], 0)
+            vector_preds = torch.cat((vector_preds, reconstructed_pred.view(-1)), dim=0)
+
+            target_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragment_id, 'inklabels.png')
+            target = cv2.imread(target_path, cv2.IMREAD_GRAYSCALE)
+            vector_target = torch.cat((vector_target, target.view(-1)), dim=0)
 
         # Calculate F0.5 score between sub images and sub label target
         preds = preds.view(-1)
