@@ -55,7 +55,7 @@ training_loader = DataLoader(
 #     drop_last=True,
 # )
 
-model = Unet3d(nb_blocks=1, inputs_size=TILE_SIZE).to(DEVICE).half()
+model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(DEVICE).half()
 optimizer = AdamW(model.parameters(), lr=0.001)
 # loss_fn = BCEDiceLoss(bce_weight=1)
 loss_fn = nn.BCEWithLogitsLoss()
@@ -68,8 +68,8 @@ for i, batch in enumerate(training_loader):
     optimizer.zero_grad()
     outputs = model(images)
     loss = loss_fn(outputs, masks)
-    training_loss.update(loss)
     loss.backward()
     optimizer.step()
+    # training_loss.update(loss)
 
 epoch_loss = training_loss.compute()
