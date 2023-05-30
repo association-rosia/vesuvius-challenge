@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
 from torch import nn
@@ -17,7 +18,7 @@ from src.utils import get_device, get_fragments_shape
 
 from tqdm import tqdm
 
-DEVICE = get_device()
+DEVICE = 'cpu'  # get_device()
 BATCH_SIZE = 8
 
 training_dataset = DatasetVesuvius(
@@ -64,7 +65,7 @@ for i, batch in tqdm(enumerate(training_loader)):
     _, _, masks, images = batch
     optimizer.zero_grad()
     outputs = model(images)
-    loss = loss_fn(outputs, masks)
+    loss = loss_fn(outputs.view(-1), masks.view(-1))
     training_loss.update(loss)
     loss.backward()
     optimizer.step()
