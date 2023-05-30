@@ -33,7 +33,6 @@ training_loader = DataLoader(
     batch_size=BATCH_SIZE,
     shuffle=True,
     drop_last=True,
-    num_workers=4,
 )
 
 val_dataset = DatasetVesuvius(
@@ -50,7 +49,6 @@ val_dataloader = DataLoader(
     dataset=val_dataset,
     batch_size=BATCH_SIZE,
     drop_last=True,
-    num_workers=4,
 )
 
 model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(DEVICE).half()
