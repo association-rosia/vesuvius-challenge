@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
+from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 
@@ -54,7 +55,8 @@ training_loader = DataLoader(
 
 model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(DEVICE).half()
 optimizer = AdamW(model.parameters(), lr=0.001)
-loss_fn = BCEDiceLoss(bce_weight=1)
+# loss_fn = BCEDiceLoss(bce_weight=1)
+loss_fn = nn.BCEWithLogitsLoss()
 metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
 
 training_loss = MeanMetric().to(DEVICE)
