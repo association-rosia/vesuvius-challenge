@@ -123,6 +123,9 @@ class DatasetVesuvius(Dataset):
     def __getitem__(self, idx):
         fragment, bbox = self.items[idx]['fragment'], self.items[idx]['bbox']
         x0, y0, x1, y1 = bbox
+
+        print(self.data[fragment]['mask'], self.data[fragment]['image'])
+
         mask = torch.unsqueeze(self.data[fragment]['mask'][x0:x1, y0:y1] / 255.0, dim=0)
         image = torch.unsqueeze(self.data[fragment]['image'][:, x0:x1, y0:y1] / 255.0, dim=0)
 
