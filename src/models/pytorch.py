@@ -1,6 +1,5 @@
 import os
 import sys
-
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
 from torch.utils.data import DataLoader
@@ -14,6 +13,8 @@ from src.models.metrics import F05Score
 from src.models.unet3d import Unet3d
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, TILE_SIZE, Z_DIM
 from src.utils import get_device, get_fragments_shape
+
+from tqdm import tqdm
 
 DEVICE = get_device()
 BATCH_SIZE = 8
@@ -57,7 +58,7 @@ loss_fn = BCEDiceLoss(bce_weight=0.5)
 metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE))
 
 training_loss = MeanMetric()
-for i, batch in enumerate(training_loader):
+for i, batch in tqdm(enumerate(training_loader)):
     _, _, masks, images = batch
     optimizer.zero_grad()
     outputs = model(images)
