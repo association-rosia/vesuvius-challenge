@@ -21,21 +21,20 @@ from torchvision import transforms as T
 from tiler import Tiler
 
 from src.utils import get_device
-from constant import Z_DIM, TILE_SIZE, TRAIN_FRAGMENTS, TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
+from constant import Z_DIM, TILE_SIZE, TRAIN_FRAGMENTS, TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
-    def __init__(self, fragments, tile_size, num_slices, random_slices, selection_thr, augmentation, test, device):
+    def __init__(self, fragments, tile_size, num_slices, random_slices, selection_thr, augmentation, device):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
         self.random_slices = random_slices
         self.selection_thr = selection_thr
         self.augmentation = augmentation
-        self.test = test
         self.device = device
 
-        self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
+        self.set_path = TRAIN_FRAGMENTS_PATH
         self.slices = self.make_slices()
         self.data, self.items = self.make_data()
         self.transforms = T.RandomApply(
@@ -150,7 +149,6 @@ if __name__ == "__main__":
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        test=False,
         device=device,
     )
 

@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
 import torch
@@ -62,28 +63,27 @@ class F05Score(torchmetrics.Metric):
         # Calculate F0.5 score between sub images and sub label target
         preds = preds.view(-1)
         target = torch.where(target.view(-1) > 0.5, 1, 0)
-        
+
         vector_target = torch.where(vector_target > 0.5, 1, 0)
-        
+
         best_sub_f05_threshold = -1
         best_sub_f05_score = -1
-        
+
         best_f05_threshold = -1
         best_f05_score = -1
-        
+
         for threshold in np.arange(0.1, 1, 0.1):
             f05score = BinaryFBetaScore(0.5, threshold).to(device=device)
-            
+
             sub_f05_score = f05score(preds, target)
             if best_sub_f05_threshold < sub_f05_score:
-                best_sub_f05_threshold = threshold 
+                best_sub_f05_threshold = threshold
                 best_sub_f05_score = sub_f05_score
-    
+
             f05_score = f05score(vector_preds, vector_target)
             if best_f05_threshold < f05_score:
-                best_f05_threshold = threshold 
+                best_f05_threshold = threshold
                 best_f05_score = f05_score
-    
 
         return best_sub_f05_threshold, best_sub_f05_score, best_f05_threshold, best_f05_score
 
