@@ -18,7 +18,7 @@ from src.utils import get_device, get_fragments_shape
 
 from tqdm import tqdm
 
-DEVICE = 'cpu'  # get_device()
+DEVICE = get_device()
 BATCH_SIZE = 8
 
 training_dataset = DatasetVesuvius(
