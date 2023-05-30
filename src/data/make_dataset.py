@@ -146,7 +146,7 @@ class DatasetVesuvius(Dataset):
         print(image.get_device(), mask.get_device())
         print('================')
 
-        image = torch.HalfTensor(image, device=self.device)
+        image = image.half()
         mask = mask.type(torch.HalfTensor)
 
         print('======== AFTER HalfTensor ========')
