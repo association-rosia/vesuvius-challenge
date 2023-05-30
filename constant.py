@@ -6,8 +6,8 @@ from os import sep
 TRAIN_FRAGMENTS = ['3'] # ['1', '2']
 VAL_FRAGMENTS = ['3']
 
-Z_DIM = 4
-TILE_SIZE = 64
+Z_DIM = 8
+TILE_SIZE = 256
 
 # KAGGLE DIRECTORIES
 KAGGLE_WORKING_DIR = join(abspath(sep), 'kaggle', 'working')
