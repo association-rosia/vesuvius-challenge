@@ -124,15 +124,15 @@ class DatasetVesuvius(Dataset):
         fragment, bbox = self.items[idx]['fragment'], self.items[idx]['bbox']
         x0, y0, x1, y1 = bbox
 
-        print('================')
-        print(self.data[fragment]['mask'], self.data[fragment]['image'])
+        print('======== ALL IMAGE ========')
+        print(self.data[fragment]['mask'].get_device(), self.data[fragment]['image'].get_device())
         print('================')
 
         mask = torch.unsqueeze(self.data[fragment]['mask'][x0:x1, y0:y1] / 255.0, dim=0)
         image = torch.unsqueeze(self.data[fragment]['image'][:, x0:x1, y0:y1] / 255.0, dim=0)
 
-        print('================')
-        print(image, mask)
+        print('======== BEFORE TRANSFORMS ========')
+        print(image.get_device(), mask.get_device())
         print('================')
 
         if self.augmentation:
@@ -142,11 +142,15 @@ class DatasetVesuvius(Dataset):
             torch.manual_seed(seed)
             mask = torch.squeeze(self.transforms(mask))
 
+        print('======== AFTER TRANSFORMS ========')
+        print(image.get_device(), mask.get_device())
+        print('================')
+
         image = image.type(torch.HalfTensor)
         mask = mask.type(torch.HalfTensor)
 
-        print('================')
-        print(image, mask)
+        print('======== AFTER HalfTensor ========')
+        print(image.get_device(), mask.get_device())
         print('================')
 
         return fragment, bbox, mask, image
