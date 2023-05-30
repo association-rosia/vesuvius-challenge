@@ -36,21 +36,21 @@ training_loader = DataLoader(
     drop_last=True,
 )
 
-val_dataset = DatasetVesuvius(
-    fragments=VAL_FRAGMENTS,
-    tile_size=TILE_SIZE,
-    num_slices=Z_DIM,
-    random_slices=False,
-    selection_thr=0.01,
-    augmentation=True,
-    device=DEVICE
-)
-
-val_dataloader = DataLoader(
-    dataset=val_dataset,
-    batch_size=BATCH_SIZE,
-    drop_last=True,
-)
+# val_dataset = DatasetVesuvius(
+#     fragments=VAL_FRAGMENTS,
+#     tile_size=TILE_SIZE,
+#     num_slices=Z_DIM,
+#     random_slices=False,
+#     selection_thr=0.01,
+#     augmentation=True,
+#     device=DEVICE
+# )
+#
+# val_dataloader = DataLoader(
+#     dataset=val_dataset,
+#     batch_size=BATCH_SIZE,
+#     drop_last=True,
+# )
 
 model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(DEVICE).half()
 optimizer = AdamW(model.parameters(), lr=0.001)
