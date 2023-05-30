@@ -3,6 +3,7 @@ import sys
 
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
+import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
@@ -54,6 +55,7 @@ training_loader = DataLoader(
 #     drop_last=True,
 # )
 
+torch.backends.cudnn.enabled = False
 model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(DEVICE).half()
 optimizer = AdamW(model.parameters(), lr=0.001)
 # loss_fn = BCEDiceLoss(bce_weight=1)
@@ -65,7 +67,7 @@ for i, batch in tqdm(enumerate(training_loader)):
     _, _, masks, images = batch
     optimizer.zero_grad()
     outputs = model(images)
-    loss = loss_fn(outputs.view(-1), masks.view(-1))
+    loss = loss_fn(outputs, masks)
     training_loss.update(loss)
     loss.backward()
     optimizer.step()
