@@ -21,6 +21,8 @@ from tqdm import tqdm
 
 DEVICE = get_device()
 BATCH_SIZE = 8
+
+print()
 print()
 
 training_dataset = DatasetVesuvius(
