@@ -65,12 +65,13 @@ class TTARandomRotation(DualTransform):
 
 
 class TTARandomPerspective(DualTransform):
-    """Rotate the image by angle.
+    """Performs a random perspective transformation of the given image with a given probability.
     If the image is torch Tensor, it is expected
     to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.
 
     Args:
-        degree int: The range of degree (-degree, +degree).
+        distortion_scale (float): argument to control the degree of distortion and ranges from 0 to 1.
+            Default is 0.5.
 
     """
 
