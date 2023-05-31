@@ -27,7 +27,7 @@ training_dataset = DatasetVesuvius(
     random_slices=False,
     selection_thr=0.01,
     augmentation=True,
-    device=DEVICE
+    device='cpu'
 )
 
 training_loader = DataLoader(
@@ -44,7 +44,7 @@ val_dataset = DatasetVesuvius(
     random_slices=False,
     selection_thr=0.01,
     augmentation=True,
-    device=DEVICE
+    device='cpu'
 )
 
 val_dataloader = DataLoader(
