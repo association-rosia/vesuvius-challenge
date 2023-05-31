@@ -65,6 +65,7 @@ metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
 
 training_loss = MeanMetric().to(DEVICE)
 for i, batch in enumerate(training_loader):
+    print(i)
     _, _, masks, images = batch
     optimizer.zero_grad()
     outputs = model(images)
