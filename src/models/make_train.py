@@ -58,7 +58,7 @@ def get_dataloaders():
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        device=device
+        device='cpu'
     )
 
     train_dataloader = DataLoader(
@@ -75,7 +75,7 @@ def get_dataloaders():
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        device=device
+        device='cpu'
     )
 
     val_dataloader = DataLoader(
@@ -98,7 +98,6 @@ def get_trainer():
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
 
-    # init the trainer
     trainer = pl.Trainer(
         accelerator='gpu',
         devices=1,
