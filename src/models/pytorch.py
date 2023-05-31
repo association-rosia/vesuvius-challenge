@@ -22,6 +22,8 @@ from tqdm import tqdm
 DEVICE = get_device()
 BATCH_SIZE = 8
 
+print()
+
 training_dataset = DatasetVesuvius(
     fragments=TRAIN_FRAGMENTS,
     tile_size=TILE_SIZE,
@@ -66,6 +68,9 @@ metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
 training_loss = MeanMetric().to(DEVICE)
 for i, batch in tqdm(enumerate(training_loader), total=len(training_loader)):
     _, _, masks, images = batch
+    # masks = masks.to(DEVICE)
+    # images = images.to(DEVICE)
+
     optimizer.zero_grad()
     outputs = model(images)
     loss = loss_fn(outputs, masks)
