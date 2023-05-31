@@ -17,8 +17,6 @@ from src.models.unet3d import Unet3d
 from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, TILE_SIZE, Z_DIM
 from src.utils import get_device, get_fragments_shape
 
-from tqdm import tqdm
-
 DEVICE = get_device()
 BATCH_SIZE = 8
 
@@ -76,6 +74,7 @@ for i, batch in enumerate(training_loader):
     loss = loss_fn(outputs, masks)
     print(loss.item())
     loss.backward()
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 5)
     optimizer.step()
     training_loss.update(loss)
 
