@@ -55,8 +55,8 @@ val_dataloader = DataLoader(
 
 print()
 
-model = Unet3d(nb_blocks=2, inputs_size=TILE_SIZE).to(DEVICE) # .half()
-optimizer = AdamW(model.parameters(), lr=0.0001)
+model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(DEVICE)
+optimizer = AdamW(model.parameters(), lr=0.00001)
 loss_fn = BCEDiceLoss(bce_weight=0.5)
 # loss_fn = nn.BCEWithLogitsLoss()
 metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
@@ -65,8 +65,8 @@ training_loss = MeanMetric().to(DEVICE)
 print('Train model...')
 for i, batch in enumerate(training_loader):
     _, _, masks, images = batch
-    masks = masks.to(DEVICE) #.half()
-    images = images.to(DEVICE) #.half()
+    masks = masks.to(DEVICE)
+    images = images.to(DEVICE)
     optimizer.zero_grad()
     outputs = model(images)
     loss = loss_fn(outputs, masks)
