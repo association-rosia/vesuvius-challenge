@@ -58,7 +58,7 @@ def get_dataloaders():
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        device='cpu'
+        device=device
     )
 
     train_dataloader = DataLoader(
@@ -75,7 +75,7 @@ def get_dataloaders():
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        device='cpu'
+        device=device
     )
 
     val_dataloader = DataLoader(
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             config={
                 'batch_size': 4,
                 'model_name': 'UNet3D',
-                'nb_blocks': 2,
+                'nb_blocks': 3,
                 'bce_weight': 0.5,
                 'scheduler_patience': 5,
                 'learning_rate': 0.00001,
