@@ -194,3 +194,68 @@ class TTARandomPerspective(DualTransform):
 
     def apply_deaug_label(self, label, **kwargs):
         return label
+
+
+class TTAElasticTransform(DualTransform):
+    identity_param = [0.0, 0.0]
+
+    def __init__(self, alpha_sigma=[50.0, 5.0]):
+        self.alpha_sigma = alpha_sigma
+
+        alphas_sigmas = (
+            [self.alpha_sigma]
+            if self.identity_param == self.alpha_sigma
+            else [self.identity_param, self.alpha_sigma]
+        )
+
+        super().__init__("alpha_sigma", alphas_sigmas)
+
+    def get_params(self, alpha: float, sigma: float, size: List[int]):
+        dx = torch.rand([1, 1] + size) * 2 - 1
+        if sigma > 0.0:
+            kx = int(8 * sigma + 1)
+            # if kernel size is even we have to make it odd
+            if kx % 2 == 0:
+                kx += 1
+            dx = F.gaussian_blur(dx, [kx, kx], sigma)
+        dx = dx * alpha / size[0]
+
+        dy = torch.rand([1, 1] + size) * 2 - 1
+        if sigma > 0.0:
+            ky = int(8 * sigma + 1)
+            # if kernel size is even we have to make it odd
+            if ky % 2 == 0:
+                ky += 1
+            dy = F.gaussian_blur(dy, [ky, ky], sigma)
+        dy = dy * alpha / size[1]
+        return torch.concat([dx, dy], 1).permute([0, 2, 3, 1])  # 1 x H x W x 2
+
+    def apply_aug_image(
+        self,
+        image,
+        alpha_sigma,
+        interpolation=F.InterpolationMode.BILINEAR,
+        fill=0,
+        **kwargs,
+    ):
+        _, height, width = F.get_dimensions(image)
+        displacement = self.get_params(alpha_sigma[0], alpha_sigma[1], [height, width])
+        self.displacement = displacement
+        return F.elastic_transform(image, displacement, interpolation, fill)
+
+    def apply_deaug_mask(
+        self,
+        mask,
+        interpolation=F.InterpolationMode.BILINEAR,
+        fill=0,
+        **kwargs,
+    ):
+        return F.elastic_transform(
+            mask,
+            -self.displacement,
+            interpolation,
+            fill,
+        )
+
+    def apply_deaug_label(self, label, **kwargs):
+        return label
