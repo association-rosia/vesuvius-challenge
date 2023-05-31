@@ -64,8 +64,7 @@ loss_fn = nn.BCEWithLogitsLoss()
 metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
 
 training_loss = MeanMetric().to(DEVICE)
-for i, batch in enumerate(training_loader):
-    print(i)
+for i, batch in tqdm(enumerate(training_loader), total=len(training_loader)):
     _, _, masks, images = batch
     optimizer.zero_grad()
     outputs = model(images)
