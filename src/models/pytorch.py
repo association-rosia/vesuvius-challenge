@@ -35,7 +35,7 @@ training_dataset = DatasetVesuvius(
 training_loader = DataLoader(
     dataset=training_dataset,
     batch_size=BATCH_SIZE,
-    shuffle=True,
+    # shuffle=True,
     drop_last=True,
 )
 
@@ -67,6 +67,9 @@ training_loss = MeanMetric().to(DEVICE)
 for i, batch in enumerate(training_loader):
     print(i)
     _, _, masks, images = batch
+    masks = masks.to(DEVICE).half()
+    images = images.to(DEVICE).half()
+
     optimizer.zero_grad()
     outputs = model(images)
     loss = loss_fn(outputs, masks)
