@@ -18,7 +18,7 @@ from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, TILE_SIZE, Z_DIM
 from src.utils import get_device, get_fragments_shape
 
 DEVICE = get_device()
-BATCH_SIZE = 8
+BATCH_SIZE = 4
 
 training_dataset = DatasetVesuvius(
     fragments=TRAIN_FRAGMENTS,
