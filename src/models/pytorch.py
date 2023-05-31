@@ -56,7 +56,7 @@ val_dataloader = DataLoader(
 print()
 
 model = Unet3d(nb_blocks=2, inputs_size=TILE_SIZE).to(DEVICE).half()
-optimizer = AdamW(model.parameters(), lr=0.001)
+optimizer = AdamW(model.parameters(), lr=0.0001)
 # loss_fn = BCEDiceLoss(bce_weight=1)
 loss_fn = nn.BCEWithLogitsLoss()
 metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
