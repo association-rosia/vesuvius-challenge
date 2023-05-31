@@ -65,6 +65,9 @@ metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
 training_loss = MeanMetric().to(DEVICE)
 for i, batch in tqdm(enumerate(training_loader), total=len(training_loader)):
     _, _, masks, images = batch.to(DEVICE)
+    masks = masks.to(DEVICE)
+    images = images.to(DEVICE)
+
     optimizer.zero_grad()
     outputs = model(images)
     loss = loss_fn(outputs, masks)
