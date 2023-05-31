@@ -133,9 +133,6 @@ class DatasetVesuvius(Dataset):
             torch.manual_seed(seed)
             mask = torch.squeeze(self.transforms(mask))
 
-        # image = image.half()
-        # mask = mask.half()
-
         return fragment, bbox, mask, image
 
 

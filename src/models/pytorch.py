@@ -70,7 +70,6 @@ for i, batch in enumerate(training_loader):
     optimizer.zero_grad()
     outputs = model(images)
     loss = loss_fn(outputs, masks)
-    print(loss.item())
     loss.backward()
     optimizer.step()
     training_loss.update(loss)

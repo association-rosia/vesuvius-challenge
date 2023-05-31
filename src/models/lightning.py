@@ -14,8 +14,7 @@ from src.models.unet3d import Unet3d
 
 
 class LightningVesuvius(pl.LightningModule):
-    def __init__(self, model_name, model_params, learning_rate=0.0001, scheduler_patience=6, bce_weight=1,
-                 val_fragments_shape=None):
+    def __init__(self, model_name, model_params, learning_rate, scheduler_patience, bce_weight, val_fragments_shape):
         super().__init__()
 
         # Model
@@ -26,7 +25,6 @@ class LightningVesuvius(pl.LightningModule):
         self.scheduler_patience = scheduler_patience
         self.criterion = BCEDiceLoss(bce_weight=bce_weight)
         self.metric = F05Score(val_fragments_shape)
-        # self.submission = Submission(val_image_sizes)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, inputs):
@@ -34,15 +32,10 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
-        print('\n0')
         _, _, masks, images = batch
-        print('\n1')
         outputs = self.forward(images)
-        print('\n2')
         loss = self.criterion(outputs, masks)
-        print('\n3')
         self.log('train/loss', loss, on_step=False, on_epoch=True)
-        print('\n4')
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -75,83 +68,81 @@ class LightningVesuvius(pl.LightningModule):
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val/loss'}
 
 
-if __name__ == '__main__':
-    from pytorch_lightning.loggers import WandbLogger
-    from pytorch_lightning.callbacks import ModelCheckpoint
-    from src.data.make_dataset import DatasetVesuvius
-    from torch.utils.data import DataLoader
-    from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
-    from src.utils import get_fragments_shape
-    import wandb
-    from src.utils import get_device
-
-    device = get_device()
-
-    wandb.init(
-        project='vesuvius-challenge-ink-detection', group='test', entity='rosia-lab'
-    )
-
-    checkpoint_callback = ModelCheckpoint(
-        save_top_k=1,
-        monitor='val/loss',
-        mode='min',
-        dirpath=MODELS_DIR,
-        filename='{val/loss:.5f}-test',
-        auto_insert_metric_name=False,
-    )
-
-    logger = WandbLogger()
-
-    # use 3 batches of train, 2 batches of val and test
-    trainer = pl.Trainer(
-        limit_train_batches=3,
-        limit_val_batches=3,
-        max_epochs=2,
-        callbacks=[checkpoint_callback],
-        logger=logger,
-        log_every_n_steps=1,
-        accelerator='gpu',
-        devices='1',
-    )
-
-    train_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
-                                tile_size=TILE_SIZE,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
-        batch_size=8,
-        shuffle=False,
-        drop_last=True,
-    )
-
-    val_dataloader = DataLoader(
-        dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
-                                tile_size=TILE_SIZE,
-                                num_slices=Z_DIM,
-                                random_slices=False,
-                                selection_thr=0.01,
-                                augmentation=True,
-                                test=False,
-                                device=device),
-        batch_size=8,
-        shuffle=False,
-        drop_last=True,
-    )
-
-    val_fragments_shape = get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)
-
-    model = LightningVesuvius(
-        model_name='UNet3D',
-        model_params=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
-        val_fragments_shape=val_fragments_shape,
-    )
-
-    trainer.fit(
-        model=model,
-        train_dataloaders=train_dataloader,
-        val_dataloaders=val_dataloader,
-    )
+# if __name__ == '__main__':
+#     from pytorch_lightning.loggers import WandbLogger
+#     from pytorch_lightning.callbacks import ModelCheckpoint
+#     from src.data.make_dataset import DatasetVesuvius
+#     from torch.utils.data import DataLoader
+#     from constant import MODELS_DIR, TILE_SIZE, TRAIN_FRAGMENTS, VAL_FRAGMENTS, Z_DIM
+#     from src.utils import get_fragments_shape
+#     import wandb
+#     from src.utils import get_device
+#
+#     device = get_device()
+#
+#     wandb.init(
+#         project='vesuvius-challenge-ink-detection', group='test', entity='rosia-lab'
+#     )
+#
+#     checkpoint_callback = ModelCheckpoint(
+#         save_top_k=1,
+#         monitor='val/loss',
+#         mode='min',
+#         dirpath=MODELS_DIR,
+#         filename='{val/loss:.5f}-test',
+#         auto_insert_metric_name=False,
+#     )
+#
+#     logger = WandbLogger()
+#
+#     # use 3 batches of train, 2 batches of val and test
+#     trainer = pl.Trainer(
+#         limit_train_batches=3,
+#         limit_val_batches=3,
+#         max_epochs=2,
+#         callbacks=[checkpoint_callback],
+#         logger=logger,
+#         log_every_n_steps=1,
+#         accelerator='gpu',
+#         devices='1',
+#     )
+#
+#     train_dataloader = DataLoader(
+#         dataset=DatasetVesuvius(fragments=TRAIN_FRAGMENTS,
+#                                 tile_size=TILE_SIZE,
+#                                 num_slices=Z_DIM,
+#                                 random_slices=False,
+#                                 selection_thr=0.01,
+#                                 augmentation=True,
+#                                 device=device),
+#         batch_size=8,
+#         shuffle=False,
+#         drop_last=True,
+#     )
+#
+#     val_dataloader = DataLoader(
+#         dataset=DatasetVesuvius(fragments=VAL_FRAGMENTS,
+#                                 tile_size=TILE_SIZE,
+#                                 num_slices=Z_DIM,
+#                                 random_slices=False,
+#                                 selection_thr=0.01,
+#                                 augmentation=True,
+#                                 device=device),
+#         batch_size=8,
+#         shuffle=False,
+#         drop_last=True,
+#     )
+#
+#     val_fragments_shape = get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)
+#
+#     model = LightningVesuvius(
+#         model_name='UNet3D',
+#         model_params=dict(list_channels=[1, 32, 64], inputs_size=TILE_SIZE),
+#         val_fragments_shape=val_fragments_shape,
+#     )
+#
+#     trainer.fit(
+#         model=model,
+#         train_dataloaders=train_dataloader,
+#         val_dataloaders=val_dataloader,
+#     )

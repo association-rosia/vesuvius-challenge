@@ -58,15 +58,14 @@ def get_dataloaders():
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        test=False,
-        device=device)
+        device=device
+    )
 
     train_dataloader = DataLoader(
         dataset=train_dataset,
         batch_size=wandb.config.batch_size,
         shuffle=True,
-        drop_last=True,
-        num_workers=4,
+        drop_last=True
     )
 
     val_dataset = DatasetVesuvius(
@@ -76,14 +75,13 @@ def get_dataloaders():
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        test=False,
-        device=device)
+        device=device
+    )
 
     val_dataloader = DataLoader(
         dataset=val_dataset,
         batch_size=wandb.config.batch_size,
-        drop_last=True,
-        num_workers=4,
+        drop_last=True
     )
 
     return train_dataloader, val_dataloader
@@ -107,7 +105,6 @@ def get_trainer():
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
-        precision='16',
     )
 
     return trainer
@@ -121,12 +118,12 @@ if __name__ == '__main__':
             entity='rosia-lab',
             group='test',
             config={
-                'batch_size': 8,
+                'batch_size': 4,
                 'model_name': 'UNet3D',
-                'nb_blocks': 3,
+                'nb_blocks': 2,
                 'bce_weight': 0.5,
                 'scheduler_patience': 5,
-                'learning_rate': 0.0001,
+                'learning_rate': 0.00001,
                 'epochs': 20,
                 'tile_size': TILE_SIZE
             },
