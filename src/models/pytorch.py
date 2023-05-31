@@ -23,7 +23,6 @@ DEVICE = get_device()
 BATCH_SIZE = 8
 
 print()
-print()
 
 training_dataset = DatasetVesuvius(
     fragments=TRAIN_FRAGMENTS,
@@ -32,7 +31,7 @@ training_dataset = DatasetVesuvius(
     random_slices=False,
     selection_thr=0.01,
     augmentation=True,
-    device='cpu'
+    device=DEVICE
 )
 
 training_loader = DataLoader(
@@ -49,7 +48,7 @@ val_dataset = DatasetVesuvius(
     random_slices=False,
     selection_thr=0.01,
     augmentation=True,
-    device='cpu'
+    device=DEVICE
 )
 
 val_dataloader = DataLoader(
@@ -57,6 +56,8 @@ val_dataloader = DataLoader(
     batch_size=BATCH_SIZE,
     drop_last=True,
 )
+
+print()
 
 model = Unet3d(nb_blocks=2, inputs_size=TILE_SIZE).to(DEVICE).half()
 optimizer = AdamW(model.parameters(), lr=0.001)
@@ -67,8 +68,8 @@ metric = F05Score(get_fragments_shape(VAL_FRAGMENTS, TILE_SIZE)).to(DEVICE)
 training_loss = MeanMetric().to(DEVICE)
 for i, batch in tqdm(enumerate(training_loader), total=len(training_loader)):
     _, _, masks, images = batch
-    masks = masks.to(DEVICE)
-    images = images.to(DEVICE)
+    # masks = masks.to(DEVICE)
+    # images = images.to(DEVICE)
 
     optimizer.zero_grad()
     outputs = model(images)
