@@ -65,12 +65,10 @@ training_loss = MeanMetric().to(DEVICE)
 print('Train model...')
 for i, batch in enumerate(training_loader):
     _, _, masks, images = batch
-    print(masks.shape, images.shape)
     masks = masks.to(DEVICE).half()
     images = images.to(DEVICE).half()
     optimizer.zero_grad()
     outputs = model(images)
-    print(masks.shape, outputs.shape)
     loss = loss_fn(outputs, masks)
     print(loss.item())
     loss.backward()
