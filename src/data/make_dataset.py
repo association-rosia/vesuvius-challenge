@@ -91,8 +91,7 @@ class DatasetVesuvius(Dataset):
         items = []
         tiles = tiler(mask_pad)
 
-        print(f'\nGet items from fragment {fragment}')
-        for tile in tqdm(tiles, total=tiler.n_tiles):
+        for tile in tiles:
             if tile[1].sum() / (255 * self.tile_size ** 2) >= self.selection_thr:
                 bbox = tiler.get_tile_bbox(tile[0])
                 bbox = torch.IntTensor([bbox[0][0], bbox[0][1], bbox[1][0], bbox[1][1]])
