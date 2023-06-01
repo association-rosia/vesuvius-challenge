@@ -2,8 +2,8 @@ import os
 import sys
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
+import torch
 from torch.utils.data import DataLoader
-
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
@@ -18,18 +18,16 @@ import wandb
 
 
 def main():
+    torch.cuda.empty_cache()
     model = get_model()
-    train_dataloader, val_dataloader = get_dataloaders()
-    print('\n')
+    train_dataloader, val_dataloader = get_dataloaders(wandb.config.num_slices)
     trainer = get_trainer()
-    trainer.fit(
-        model=model,
-        train_dataloaders=train_dataloader,
-        val_dataloaders=val_dataloader,
-    )
+    trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
 
 
 def get_model():
+    model_params = {}
+
     if wandb.config.model_name == 'UNet3D':
         model_params = {
             'nb_blocks': wandb.config.nb_blocks,
@@ -42,19 +40,20 @@ def get_model():
         learning_rate=wandb.config.learning_rate,
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
+        dice_threshold=wandb.config.dice_threshold,
         val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, wandb.config.tile_size),
     )
 
     return lightning_model
 
 
-def get_dataloaders():
+def get_dataloaders(num_slices):
     device = get_device()
 
     train_dataset = DatasetVesuvius(
         fragments=TRAIN_FRAGMENTS,
         tile_size=wandb.config.tile_size,
-        num_slices=Z_DIM,
+        num_slices=num_slices,
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
@@ -71,7 +70,7 @@ def get_dataloaders():
     val_dataset = DatasetVesuvius(
         fragments=VAL_FRAGMENTS,
         tile_size=wandb.config.tile_size,
-        num_slices=Z_DIM,
+        num_slices=num_slices,
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
@@ -83,6 +82,7 @@ def get_dataloaders():
         batch_size=wandb.config.batch_size,
         drop_last=True
     )
+    print('\n')
 
     return train_dataloader, val_dataloader
 
@@ -119,12 +119,14 @@ if __name__ == '__main__':
             config={
                 'batch_size': 4,
                 'model_name': 'UNet3D',
-                'nb_blocks': 3,
+                'nb_blocks': 2,
                 'bce_weight': 0.5,
+                'dice_threshold': 0.5,
                 'scheduler_patience': 5,
                 'learning_rate': 0.00001,
                 'epochs': 20,
-                'tile_size': TILE_SIZE
+                'tile_size': TILE_SIZE,
+                'num_slices': Z_DIM
             },
         )
     else:
