@@ -41,7 +41,9 @@ def get_model():
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
         dice_threshold=wandb.config.dice_threshold,
-        val_fragments_shape=get_fragments_shape(VAL_FRAGMENTS, wandb.config.tile_size),
+        val_fragments_shape=get_fragments_shape(
+            wandb.config.val_fragments, 
+            wandb.config.tile_size),
     )
 
     return lightning_model
@@ -51,7 +53,7 @@ def get_dataloaders(num_slices):
     device = get_device()
 
     train_dataset = DatasetVesuvius(
-        fragments=TRAIN_FRAGMENTS,
+        fragments=wandb.config.train_fragments,
         tile_size=wandb.config.tile_size,
         num_slices=num_slices,
         random_slices=False,
@@ -68,7 +70,7 @@ def get_dataloaders(num_slices):
     )
 
     val_dataset = DatasetVesuvius(
-        fragments=VAL_FRAGMENTS,
+        fragments=wandb.config.val_fragments,
         tile_size=wandb.config.tile_size,
         num_slices=num_slices,
         random_slices=False,
@@ -93,7 +95,7 @@ def get_trainer():
         monitor='val/loss',
         mode='min',
         dirpath=MODELS_DIR,
-        filename='{val/loss:.5f}-' + f'{wandb.run.name}-{wandb.run.id}',
+        filename=f'{wandb.run.name}-{wandb.run.id}',
     )
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
@@ -126,7 +128,9 @@ if __name__ == '__main__':
                 'learning_rate': 0.00001,
                 'epochs': 20,
                 'tile_size': TILE_SIZE,
-                'num_slices': Z_DIM
+                'num_slices': Z_DIM,
+                'train_fragments': TRAIN_FRAGMENTS,
+                'val_fragments': VAL_FRAGMENTS,
             },
         )
     else:
