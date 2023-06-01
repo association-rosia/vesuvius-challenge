@@ -33,5 +33,7 @@ class DiceWithLogitsLoss(nn.Module):
         self.dice = Dice(threshold=self.threshold)
 
     def forward(self, preds, target):
-        loss = 1 - self.dice(self.sigmoid(preds), target)
-        return loss
+        target = target.to(dtype=torch.uint8)
+        preds = self.sigmoid(preds)
+        
+        return 1 - self.dice(preds, target)
