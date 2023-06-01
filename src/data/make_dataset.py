@@ -126,6 +126,14 @@ class DatasetVesuvius(Dataset):
         mask = torch.unsqueeze(self.data[fragment]['mask'][x0:x1, y0:y1] / 255.0, dim=0)
         image = torch.unsqueeze(self.data[fragment]['image'][:, x0:x1, y0:y1] / 255.0, dim=0)
 
+        mask_shape = self.data[fragment]['mask'].shape
+        pad_left = max(0, bbox[1] - mask_shape[1])
+        pad_right = max(0, bbox[3] - mask_shape[1])
+        pad_top = max(0, bbox[0] - mask_shape[0])
+        pad_bottom = max(0, bbox[2] - mask_shape[0])
+        mask = nn.functional.pad(mask, pad=(pad_left, pad_right, pad_top, pad_bottom), value=0.0)
+        image = nn.functional.pad(image, pad=(pad_left, pad_right, pad_top, pad_bottom, 0, 0), value=0.0)
+
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
             torch.manual_seed(seed)
@@ -140,21 +148,20 @@ if __name__ == "__main__":
     device = get_device()
 
     train_dataset = DatasetVesuvius(
-        fragments=TRAIN_FRAGMENTS,
+        fragments=['1'],
         tile_size=TILE_SIZE,
-        num_slices=Z_DIM,
+        num_slices=2,
         random_slices=False,
-        selection_thr=0.01,
-        augmentation=True,
+        selection_thr=0.0,
+        augmentation=False,
         device=device,
     )
 
-    train_dataloader = DataLoader(dataset=train_dataset, batch_size=16)
+    train_dataloader = DataLoader(dataset=train_dataset, batch_size=8)
 
-    for fragments, bboxes, masks, images in train_dataloader:
+    for i, (fragments, bboxes, masks, images) in enumerate(train_dataloader):
         print(train_dataset.slices)
         print(fragments)
         print(bboxes.shape)
         print(masks.shape)
         print(images.shape)
-        break
