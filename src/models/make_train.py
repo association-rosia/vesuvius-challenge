@@ -119,7 +119,7 @@ if __name__ == '__main__':
             config={
                 'batch_size': 4,
                 'model_name': 'UNet3D',
-                'nb_blocks': 2,
+                'nb_blocks': 3,
                 'bce_weight': 0.5,
                 'dice_threshold': 0.5,
                 'scheduler_patience': 5,
