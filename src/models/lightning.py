@@ -68,7 +68,7 @@ class LightningVesuvius(pl.LightningModule):
         }
 
         # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
-        self.log_dict(metrics, on_step=True, on_epoch=True)
+        self.log_dict(metrics, on_step=False, on_epoch=True)
         self.metric.reset()
 
         return metrics
