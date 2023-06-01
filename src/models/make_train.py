@@ -119,7 +119,7 @@ if __name__ == '__main__':
             entity='rosia-lab',
             group='test',
             config={
-                'batch_size': 6,
+                'batch_size': 5,
                 'model_name': 'UNet3D',
                 'nb_blocks': 3,
                 'bce_weight': 0.5,
