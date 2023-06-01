@@ -35,14 +35,14 @@ class LightningVesuvius(pl.LightningModule):
         _, _, masks, images = batch
         outputs = self.forward(images)
         loss = self.criterion(outputs, masks)
-        self.log('train/loss', loss, on_step=False, on_epoch=True)
+        self.log('train/loss', loss, on_step=True, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         fragments, bboxes, masks, images = batch
         outputs = self.forward(images)
         loss = self.criterion(outputs, masks)
-        self.log('val/loss', loss, on_step=False, on_epoch=True)
+        self.log('val/loss', loss, on_step=True, on_epoch=True)
         outputs = self.sigmoid(outputs)
         self.metric.update(fragments, bboxes, masks, outputs)
 
@@ -56,7 +56,7 @@ class LightningVesuvius(pl.LightningModule):
         metrics = {'val/F05Threshold': f05_threshold, 'val/F05Score': f05_score, 'val/SubF05Threshold': sub_f05_threshold, 'val/SubF05Score': sub_f05_score}
 
         # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
-        self.log_dict(metrics, on_step=False, on_epoch=True)
+        self.log_dict(metrics, on_step=True, on_epoch=True)
         self.metric.reset()
 
         return metrics

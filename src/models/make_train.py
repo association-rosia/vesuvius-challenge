@@ -100,7 +100,7 @@ def get_trainer():
 
     trainer = pl.Trainer(
         accelerator='gpu',
-        # devices=2,
+        val_check_interval=0.25,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
