@@ -21,21 +21,20 @@ from torchvision import transforms as T
 from tiler import Tiler
 
 from src.utils import get_device
-from constant import Z_DIM, TILE_SIZE, TRAIN_FRAGMENTS, TRAIN_FRAGMENTS_PATH, TEST_FRAGMENTS_PATH
+from constant import Z_DIM, TILE_SIZE, TRAIN_FRAGMENTS, TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
-    def __init__(self, fragments, tile_size, num_slices, random_slices, selection_thr, augmentation, test, device):
+    def __init__(self, fragments, tile_size, num_slices, random_slices, selection_thr, augmentation, device):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
         self.random_slices = random_slices
         self.selection_thr = selection_thr
         self.augmentation = augmentation
-        self.test = test
         self.device = device
 
-        self.set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
+        self.set_path = TRAIN_FRAGMENTS_PATH
         self.slices = self.make_slices()
         self.data, self.items = self.make_data()
         self.transforms = T.RandomApply(
@@ -92,8 +91,7 @@ class DatasetVesuvius(Dataset):
         items = []
         tiles = tiler(mask_pad)
 
-        print(f'\nGet items from fragment {fragment}')
-        for tile in tqdm(tiles, total=tiler.n_tiles):
+        for tile in tiles:
             if tile[1].sum() / (255 * self.tile_size ** 2) >= self.selection_thr:
                 bbox = tiler.get_tile_bbox(tile[0])
                 bbox = torch.IntTensor([bbox[0][0], bbox[0][1], bbox[1][0], bbox[1][1]])
@@ -124,6 +122,7 @@ class DatasetVesuvius(Dataset):
     def __getitem__(self, idx):
         fragment, bbox = self.items[idx]['fragment'], self.items[idx]['bbox']
         x0, y0, x1, y1 = bbox
+
         mask = torch.unsqueeze(self.data[fragment]['mask'][x0:x1, y0:y1] / 255.0, dim=0)
         image = torch.unsqueeze(self.data[fragment]['image'][:, x0:x1, y0:y1] / 255.0, dim=0)
 
@@ -133,9 +132,6 @@ class DatasetVesuvius(Dataset):
             image = self.transforms(image)
             torch.manual_seed(seed)
             mask = torch.squeeze(self.transforms(mask))
-
-        image = image.type(torch.HalfTensor)
-        mask = mask.type(torch.HalfTensor)
 
         return fragment, bbox, mask, image
 
@@ -150,7 +146,6 @@ if __name__ == "__main__":
         random_slices=False,
         selection_thr=0.01,
         augmentation=True,
-        test=False,
         device=device,
     )
 
