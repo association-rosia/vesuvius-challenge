@@ -18,10 +18,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
-from tiler import Tiler
 
-from src.utils import get_device
-from constant import Z_DIM, TILE_SIZE, TRAIN_FRAGMENTS, TRAIN_FRAGMENTS_PATH
+from src.utils import get_device, get_padding
+from src.constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
@@ -29,6 +28,7 @@ class DatasetVesuvius(Dataset):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
+        self.overlap = 0.5
         self.random_slices = random_slices
         self.selection_thr = selection_thr
         self.augmentation = augmentation
@@ -62,16 +62,10 @@ class DatasetVesuvius(Dataset):
         mask_path = os.path.join(fragment_path, 'inklabels.png')
         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
         shape = (self.num_slices, mask.shape[0], mask.shape[1])
-
-        tiler = Tiler(data_shape=mask.shape,
-                      tile_shape=(self.tile_size, self.tile_size),
-                      overlap=0.5)
-
-        new_shape, padding = tiler.calculate_padding()
-        tiler.recalculate(data_shape=new_shape)
+        padding = get_padding(mask.shape, self.tile_size)
         mask_pad = np.pad(mask, padding)
 
-        return tiler, mask_pad, shape, padding
+        return mask_pad, shape, padding
 
     def make_image(self, fragment_path, shape, padding):
         image = np.zeros(shape=shape, dtype=np.uint8)
@@ -87,14 +81,14 @@ class DatasetVesuvius(Dataset):
 
         return image_pad
 
-    def get_items(self, fragment, tiler, mask_pad):
+    def get_items(self, fragment, mask_pad):
         items = []
-        tiles = tiler(mask_pad)
+        x_list = np.arange(0, mask_pad.shape[1] - int(self.overlap * self.tile_size), int(self.overlap * self.tile_size)).tolist()
+        y_list = np.arange(0, mask_pad.shape[0] - int(self.overlap * self.tile_size), int(self.overlap * self.tile_size)).tolist()
 
-        for tile in tiles:
-            if tile[1].sum() / (255 * self.tile_size ** 2) >= self.selection_thr:
-                bbox = tiler.get_tile_bbox(tile[0])
-                bbox = torch.IntTensor([bbox[0][0], bbox[0][1], bbox[1][0], bbox[1][1]])
+        for x in x_list:
+            for y in y_list:
+                bbox = torch.IntTensor([x, y, x + self.tile_size, y + self.tile_size])
                 items.append({'fragment': fragment, 'bbox': bbox})
 
         return items
@@ -105,9 +99,9 @@ class DatasetVesuvius(Dataset):
 
         for fragment in self.fragments:
             fragment_path = os.path.join(self.set_path, str(fragment))
-            tiler, mask_pad, shape, padding = self.make_mask(fragment_path)
+            mask_pad, shape, padding = self.make_mask(fragment_path)
             image_pad = self.make_image(fragment_path, shape, padding)
-            items += self.get_items(fragment, tiler, mask_pad)
+            items += self.get_items(fragment, mask_pad)
 
             data[fragment] = {
                 'mask': torch.from_numpy(mask_pad).to(self.device),
@@ -123,16 +117,8 @@ class DatasetVesuvius(Dataset):
         fragment, bbox = self.items[idx]['fragment'], self.items[idx]['bbox']
         x0, y0, x1, y1 = bbox
 
-        mask = torch.unsqueeze(self.data[fragment]['mask'][x0:x1, y0:y1] / 255.0, dim=0)
-        image = torch.unsqueeze(self.data[fragment]['image'][:, x0:x1, y0:y1] / 255.0, dim=0)
-
-        mask_shape = self.data[fragment]['mask'].shape
-        pad_left = max(0, bbox[1] - mask_shape[1])
-        pad_right = max(0, bbox[3] - mask_shape[1])
-        pad_top = max(0, bbox[0] - mask_shape[0])
-        pad_bottom = max(0, bbox[2] - mask_shape[0])
-        mask = nn.functional.pad(mask, pad=(pad_left, pad_right, pad_top, pad_bottom), value=0.0)
-        image = nn.functional.pad(image, pad=(pad_left, pad_right, pad_top, pad_bottom, 0, 0), value=0.0)
+        mask = torch.unsqueeze(self.data[fragment]['mask'][y0:y1, x0:x1] / 255.0, dim=0)
+        image = torch.unsqueeze(self.data[fragment]['image'][:, y0:y1, x0:x1] / 255.0, dim=0)
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)

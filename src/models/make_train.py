@@ -12,7 +12,7 @@ from src.data.make_dataset import DatasetVesuvius
 from src.models.lightning import LightningVesuvius
 from src.utils import get_fragments_shape, get_device
 
-from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE, Z_DIM
+from src.constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE, Z_DIM
 
 import wandb
 
@@ -41,9 +41,7 @@ def get_model():
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
         dice_threshold=wandb.config.dice_threshold,
-        val_fragments_shape=get_fragments_shape(
-            wandb.config.val_fragments, 
-            wandb.config.tile_size),
+        val_fragments_shape=get_fragments_shape(wandb.config.val_fragments, wandb.config.tile_size),
     )
 
     return lightning_model
