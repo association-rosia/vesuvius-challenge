@@ -43,19 +43,18 @@ class F05Score(torchmetrics.Metric):
         padding = TILE_SIZE // 4
         reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape, padding)
 
-        device = get_device()
-        vector_preds = torch.FloatTensor().to(device)
-        vector_target = torch.FloatTensor().to(device)
+        vector_preds = torch.FloatTensor().to(device=self.device)
+        vector_target = torch.FloatTensor().to(device=self.device)
 
         for fragment_id in self.fragments_shape.keys():
             mask_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragment_id, 'mask.png')
-            mask = torch.from_numpy(cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)).to(device)
+            mask = torch.from_numpy(cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)).to(device=self.device)
             reconstructed_pred = torch.where(mask == 255, reconstructed_preds[fragment_id], 0)
             vector_preds = torch.cat((vector_preds, reconstructed_pred.view(-1)), dim=0)
 
             target_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragment_id, 'inklabels.png')
             loaded_target = torch.from_numpy(cv2.imread(target_path, cv2.IMREAD_GRAYSCALE) / 255.0)
-            loaded_target = loaded_target.to(device)
+            loaded_target = loaded_target.to(self.device)
             vector_target = torch.cat((vector_target, loaded_target.view(-1)), dim=0)
 
         # Calculate F0.5 score between sub images and sub label target
@@ -71,15 +70,15 @@ class F05Score(torchmetrics.Metric):
         best_f05_score = -1
 
         for threshold in np.arange(0.25, 0.76, 0.01):
-            f05score = BinaryFBetaScore(0.5, threshold).to(device=device)
+            f05score = BinaryFBetaScore(0.5, threshold).to(device=self.device)
 
             sub_f05_score = f05score(preds, target)
-            if best_sub_f05_threshold < sub_f05_score:
+            if best_sub_f05_score < sub_f05_score:
                 best_sub_f05_threshold = threshold
                 best_sub_f05_score = sub_f05_score
 
             f05_score = f05score(vector_preds, vector_target)
-            if best_f05_threshold < f05_score:
+            if best_f05_score < f05_score:
                 best_f05_threshold = threshold
                 best_f05_score = f05_score
 
