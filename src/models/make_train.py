@@ -57,7 +57,7 @@ def get_dataloaders(num_slices):
         tile_size=wandb.config.tile_size,
         num_slices=num_slices,
         random_slices=False,
-        selection_thr=0.01,
+        selection_thr=0.1,
         augmentation=True,
         device=device
     )
@@ -74,7 +74,7 @@ def get_dataloaders(num_slices):
         tile_size=wandb.config.tile_size,
         num_slices=num_slices,
         random_slices=False,
-        selection_thr=0.01,
+        selection_thr=0.1,
         augmentation=True,
         device=device
     )
