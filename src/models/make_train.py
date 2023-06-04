@@ -12,7 +12,7 @@ from src.data.make_dataset import DatasetVesuvius
 from src.models.lightning import LightningVesuvius
 from src.utils import get_fragments_shape, get_device
 
-from constant import TRAIN_FRAGMENTS, VAL_FRAGMENTS, MODELS_DIR, TILE_SIZE, Z_DIM
+import src.constant as cst
 
 import wandb
 
@@ -41,9 +41,7 @@ def get_model():
         scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
         dice_threshold=wandb.config.dice_threshold,
-        val_fragments_shape=get_fragments_shape(
-            wandb.config.val_fragments, 
-            wandb.config.tile_size),
+        val_fragments_shape=get_fragments_shape(wandb.config.val_fragments, wandb.config.tile_size),
     )
 
     return lightning_model
@@ -94,7 +92,7 @@ def get_trainer():
         save_top_k=1,
         monitor='val/loss',
         mode='min',
-        dirpath=MODELS_DIR,
+        dirpath=cst.MODELS_DIR,
         filename=f'{wandb.run.name}-{wandb.run.id}',
     )
 
@@ -119,18 +117,18 @@ if __name__ == '__main__':
             entity='rosia-lab',
             group='test',
             config={
-                'batch_size': 5,
+                'batch_size': cst.BATCH_SIZE,
                 'model_name': 'UNet3D',
-                'nb_blocks': 3,
-                'bce_weight': 0.5,
-                'dice_threshold': 0.5,
-                'scheduler_patience': 5,
-                'learning_rate': 0.00001,
-                'epochs': 20,
-                'tile_size': TILE_SIZE,
-                'num_slices': Z_DIM,
-                'train_fragments': TRAIN_FRAGMENTS,
-                'val_fragments': VAL_FRAGMENTS,
+                'nb_blocks': cst.NB_BLOCKS,
+                'bce_weight': cst.BCE_WEIGHT,
+                'dice_threshold': cst.DICE_THRESHOLD,
+                'scheduler_patience': cst.SCHEDULER_PATIENCE,
+                'learning_rate': cst.LR,
+                'epochs': cst.EPOCHS,
+                'tile_size': cst.TILE_SIZE,
+                'num_slices': cst.Z_DIM,
+                'train_fragments': cst.TRAIN_FRAGMENTS,
+                'val_fragments': cst.VAL_FRAGMENTS,
             },
         )
     else:

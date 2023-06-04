@@ -9,6 +9,14 @@ VAL_FRAGMENTS = ['3']
 Z_DIM = 8
 TILE_SIZE = 256
 
+BATCH_SIZE = 4
+NB_BLOCKS = 3
+BCE_WEIGHT = 0.5
+DICE_THRESHOLD = 0.5
+SCHEDULER_PATIENCE = 5
+LR = 1e-5
+EPOCHS = 20
+
 # KAGGLE DIRECTORIES
 KAGGLE_WORKING_DIR = join(abspath(sep), 'kaggle', 'working')
 KAGGLE_INPUT_DIR = join(abspath(sep), 'kaggle', 'input')

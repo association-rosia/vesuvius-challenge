@@ -9,8 +9,8 @@ from torchmetrics.classification import BinaryFBetaScore
 
 import numpy as np
 
-from src.utils import reconstruct_images, get_device
-from constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH
+from src.utils import reconstruct_outputs
+from src.constant import TRAIN_FRAGMENTS_PATH
 
 import cv2
 
@@ -39,9 +39,7 @@ class F05Score(torchmetrics.Metric):
         preds = torch.cat(self.preds, dim=0)
         target = torch.cat(self.target, dim=0)
         bboxes = torch.cat(self.bboxes, dim=0)
-
-        padding = TILE_SIZE // 4
-        reconstructed_preds = reconstruct_images(preds, bboxes, self.fragments, self.fragments_shape, padding)
+        reconstructed_preds = reconstruct_outputs(preds, bboxes, self.fragments, self.fragments_shape)
 
         vector_preds = torch.FloatTensor().to(device=self.device)
         vector_target = torch.FloatTensor().to(device=self.device)
