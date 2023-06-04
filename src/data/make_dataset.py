@@ -24,19 +24,21 @@ from src.constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
-    def __init__(self, fragments, tile_size, num_slices, random_slices, selection_thr, augmentation, device):
+    def __init__(self, fragments, tile_size, num_slices, slices_list, random_slices, selection_thr, augmentation, device):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
-        self.overlap = 0.5
+        self.slices_list = slices_list
         self.random_slices = random_slices
         self.selection_thr = selection_thr
         self.augmentation = augmentation
         self.device = device
 
+        self.overlap = 0.5
         self.set_path = TRAIN_FRAGMENTS_PATH
         self.slices = self.make_slices()
         self.data, self.items = self.make_data()
+
         self.transforms = T.RandomApply(
             nn.ModuleList([
                 T.RandomRotation(180),
@@ -48,13 +50,15 @@ class DatasetVesuvius(Dataset):
         )
 
     def make_slices(self):
-        total_slices = 65
-        slices = [i for i in range(total_slices)]
-
-        if self.random_slices:
-            slices = sorted(random.sample(slices, k=self.num_slices), reverse=True)
+        if self.slices_list:
+            slices = self.slices_list
         else:
-            slices = sorted(slices, reverse=True)[:self.num_slices]
+            total_slices = 65
+            slices = [i for i in range(total_slices)]
+            if self.random_slices:
+                slices = sorted(random.sample(slices, k=self.num_slices), reverse=True)
+            else:
+                slices = sorted(slices, reverse=True)[:self.num_slices]
 
         return slices
 
