@@ -56,7 +56,7 @@ class TTARandomRotation(DualTransform):
         return self.apply_aug_image(mask, -angle)
 
     def apply_deaug_label(self, label, angle=0, **kwargs):
-        return label
+        return self.apply_aug_image(label, -angle)
 
 
 class TTARandomPerspective(DualTransform):
@@ -187,8 +187,17 @@ class TTARandomPerspective(DualTransform):
 
         return F.perspective(image, endpoints, startpoints, interpolation, fill)
 
-    def apply_deaug_label(self, label, **kwargs):
-        return label
+    def apply_deaug_label(
+        self,
+        image,
+        distortion_scale,
+        interpolation=F.InterpolationMode.BILINEAR,
+        fill=0,
+        **kwargs,
+    ):
+        startpoints, endpoints = self._get_points(image)
+
+        return F.perspective(image, endpoints, startpoints, interpolation, fill)
 
 
 class TTAElasticTransform(DualTransform):
@@ -252,8 +261,19 @@ class TTAElasticTransform(DualTransform):
             fill,
         )
 
-    def apply_deaug_label(self, label, **kwargs):
-        return label
+    def apply_deaug_label(
+        self,
+        label,
+        interpolation=F.InterpolationMode.BILINEAR,
+        fill=0,
+        **kwargs,
+    ):
+        return F.elastic_transform(
+            label,
+            -self.displacement,
+            interpolation,
+            fill,
+        )
 
 
 class TTAHorizontalFlip(DualTransform):
@@ -275,6 +295,8 @@ class TTAHorizontalFlip(DualTransform):
         return mask
 
     def apply_deaug_label(self, label, apply=False, **kwargs):
+        if apply:
+            label = F.hflip(label)
         return label
 
     def apply_deaug_keypoints(self, keypoints, apply=False, **kwargs):
@@ -302,6 +324,8 @@ class TTAVerticalFlip(DualTransform):
         return mask
 
     def apply_deaug_label(self, label, apply=False, **kwargs):
+        if apply:
+            label = F.vflip(label)
         return label
 
     def apply_deaug_keypoints(self, keypoints, apply=False, **kwargs):
