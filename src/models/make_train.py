@@ -104,6 +104,7 @@ def get_trainer():
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
+        precision=16
     )
 
     return trainer
