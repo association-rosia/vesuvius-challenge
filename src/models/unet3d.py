@@ -37,11 +37,11 @@ class EncoderBlock3d(nn.Module):
 
 
 class UNetEncoder3d(nn.Module):
-    def __init__(self, nb_blocks: int):
+    def __init__(self, num_blocks: int):
         super().__init__()
         self.encoderblocks = nn.ModuleList([])
         self.encoderblocks.append(EncoderBlock3d(1, 32, 64))
-        for num_block in range(1, nb_blocks):
+        for num_block in range(1, num_blocks):
             in_channels, out_channels = 2**(5 + num_block), 2**(6 + num_block) # 2**(5 + 1) = 64
             self.encoderblocks.append(EncoderBlock3d(in_channels, out_channels, out_channels))
             
@@ -71,10 +71,10 @@ class DecoderBlock3d(nn.Module):
 
 
 class UNetDecoder3d(nn.Module):
-    def __init__(self, nb_blocks: int):
+    def __init__(self, num_blocks: int):
         super().__init__()
         self.decoderblocks = nn.ModuleList([])
-        for num_block in range(nb_blocks, 0, -1):
+        for num_block in range(num_blocks, 0, -1):
             in_channels, out_channels = 2**(6 + num_block), 2**(5 + num_block) # 2**(5 + 1) = 64
             self.decoderblocks.append(DecoderBlock3d(in_channels, out_channels, out_channels))
 
@@ -100,12 +100,12 @@ class SegmentationHead(nn.Module):
 
 
 class Unet3d(nn.Module):
-    def __init__(self, nb_blocks, inputs_size):
+    def __init__(self, num_blocks, inputs_size):
         super().__init__()
 
-        self.encoder = UNetEncoder3d(nb_blocks=nb_blocks)
-        self.bottleneck = ConvBlock3d(2**(5 + nb_blocks), 2**(5 + nb_blocks), 2**(6 + nb_blocks))
-        self.decoder = UNetDecoder3d(nb_blocks=nb_blocks)
+        self.encoder = UNetEncoder3d(num_blocks=num_blocks)
+        self.bottleneck = ConvBlock3d(2**(5 + num_blocks), 2**(5 + num_blocks), 2**(6 + num_blocks))
+        self.decoder = UNetDecoder3d(num_blocks=num_blocks)
         self.segmenter = SegmentationHead(64, 1, inputs_size)
 
     def forward(self, x):
@@ -127,7 +127,7 @@ if __name__ == "__main__":
 
     from src.constant import TILE_SIZE
 
-    model = Unet3d(nb_blocks=3, inputs_size=TILE_SIZE).to(device='cuda')
+    model = Unet3d(num_blocks=3, inputs_size=TILE_SIZE).to(device='cuda')
     print(model)
     inputs = torch.randn((8, 1, 8, 256, 256)).to(device='cuda')
     print(model(inputs))

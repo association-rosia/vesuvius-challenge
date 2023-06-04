@@ -81,15 +81,20 @@ class DatasetVesuvius(Dataset):
 
         return image_pad
 
-    def get_items(self, fragment, mask_pad):
+    def create_items(self, fragment, mask_pad):
         items = []
-        x_list = np.arange(0, mask_pad.shape[1] - int(self.overlap * self.tile_size), int(self.overlap * self.tile_size)).tolist()
-        y_list = np.arange(0, mask_pad.shape[0] - int(self.overlap * self.tile_size), int(self.overlap * self.tile_size)).tolist()
+        overlap_size = int(self.overlap * self.tile_size)
+        x_list = np.arange(0, mask_pad.shape[1] - overlap_size, overlap_size).tolist()
+        y_list = np.arange(0, mask_pad.shape[0] - overlap_size, overlap_size).tolist()
 
         for x in x_list:
             for y in y_list:
                 bbox = torch.IntTensor([x, y, x + self.tile_size, y + self.tile_size])
-                items.append({'fragment': fragment, 'bbox': bbox})
+                x0, y0, x1, y1 = bbox
+                tile = mask_pad[y0:y1, x0:x1]
+
+                if tile.sum() / (255 * self.tile_size ** 2) >= self.selection_thr:
+                    items.append({'fragment': fragment, 'bbox': bbox})
 
         return items
 
@@ -101,7 +106,7 @@ class DatasetVesuvius(Dataset):
             fragment_path = os.path.join(self.set_path, str(fragment))
             mask_pad, shape, padding = self.make_mask(fragment_path)
             image_pad = self.make_image(fragment_path, shape, padding)
-            items += self.get_items(fragment, mask_pad)
+            items += self.create_items(fragment, mask_pad)
 
             data[fragment] = {
                 'mask': torch.from_numpy(mask_pad).to(self.device),

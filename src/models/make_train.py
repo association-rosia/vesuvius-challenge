@@ -20,7 +20,7 @@ import wandb
 def main():
     torch.cuda.empty_cache()
     model = get_model()
-    train_dataloader, val_dataloader = get_dataloaders(wandb.config.num_slices)
+    train_dataloader, val_dataloader = get_dataloaders()
     trainer = get_trainer()
     trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
 
@@ -30,7 +30,7 @@ def get_model():
 
     if wandb.config.model_name == 'UNet3D':
         model_params = {
-            'nb_blocks': wandb.config.nb_blocks,
+            'num_blocks': wandb.config.num_blocks,
             'inputs_size': wandb.config.tile_size,
         }
 
@@ -47,16 +47,16 @@ def get_model():
     return lightning_model
 
 
-def get_dataloaders(num_slices):
+def get_dataloaders():
     device = get_device()
 
     train_dataset = DatasetVesuvius(
         fragments=wandb.config.train_fragments,
         tile_size=wandb.config.tile_size,
-        num_slices=num_slices,
-        random_slices=False,
-        selection_thr=0.1,
-        augmentation=True,
+        num_slices=wandb.config.num_slices,
+        random_slices=wandb.config.random_slices,
+        selection_thr=wandb.config.selection_thr,
+        augmentation=wandb.config.augmentation,
         device=device
     )
 
@@ -70,10 +70,10 @@ def get_dataloaders(num_slices):
     val_dataset = DatasetVesuvius(
         fragments=wandb.config.val_fragments,
         tile_size=wandb.config.tile_size,
-        num_slices=num_slices,
-        random_slices=False,
-        selection_thr=0.1,
-        augmentation=True,
+        num_slices=wandb.config.num_slices,
+        random_slices=wandb.config.random_slices,
+        selection_thr=wandb.config.selection_thr,
+        augmentation=wandb.config.augmentation,
         device=device
     )
 
@@ -117,16 +117,19 @@ if __name__ == '__main__':
             entity='rosia-lab',
             group='test',
             config={
-                'batch_size': cst.BATCH_SIZE,
                 'model_name': 'UNet3D',
-                'nb_blocks': cst.NB_BLOCKS,
+                'num_blocks': cst.NUM_BLOCKS,
+                'epochs': cst.EPOCHS,
+                'batch_size': cst.BATCH_SIZE,
+                'learning_rate': cst.LEARNING_RATE,
+                'scheduler_patience': cst.SCHEDULER_PATIENCE,
                 'bce_weight': cst.BCE_WEIGHT,
                 'dice_threshold': cst.DICE_THRESHOLD,
-                'scheduler_patience': cst.SCHEDULER_PATIENCE,
-                'learning_rate': cst.LR,
-                'epochs': cst.EPOCHS,
                 'tile_size': cst.TILE_SIZE,
-                'num_slices': cst.Z_DIM,
+                'num_slices': cst.NUM_SLICES,
+                'random_slices': cst.RANDOM_SLICES,
+                'selection_thr': cst.SELECTION_THR,
+                'augmentation': cst.AUGMENTATION,
                 'train_fragments': cst.TRAIN_FRAGMENTS,
                 'val_fragments': cst.VAL_FRAGMENTS,
             },
