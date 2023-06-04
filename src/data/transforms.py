@@ -10,11 +10,6 @@ from ttach.base import DualTransform
 
 from typing import List
 
-# TODO
-# T.ElasticTransform(alpha=500.0, sigma=10.0),
-# T.RandomHorizontalFlip(),
-# T.RandomVerticalFlip()
-
 
 class TTARandomRotation(DualTransform):
     """Rotate the image by angle.
