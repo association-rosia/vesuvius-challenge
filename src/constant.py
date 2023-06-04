@@ -9,6 +9,14 @@ VAL_FRAGMENTS = ['3']
 Z_DIM = 8
 TILE_SIZE = 256
 
+BATCH_SIZE = 4
+NB_BLOCKS = 3
+BCE_WEIGHT = 0.5
+DICE_THRESHOLD = 0.5
+SCHEDULER_PATIENCE = 5
+LR = 1e-5
+EPOCHS = 20
+
 # KAGGLE DIRECTORIES
 KAGGLE_WORKING_DIR = join(abspath(sep), 'kaggle', 'working')
 KAGGLE_INPUT_DIR = join(abspath(sep), 'kaggle', 'input')
@@ -20,15 +28,15 @@ KAGGLE_TILES_PATH = join(KAGGLE_INPUT_DIR, 'vesuvius-challenge-256x256-tiles', '
 # COOKIECUTTER DIRECTORIES
 COOKIECUTTER_MODELS_DIR = 'models'
 COOKIECUTTER_SUBMISSIONS_DIR = 'submissions'
-COOKIECUTTER_TRAIN_FRAGMENTS_PATH = join('../data', 'raw', 'train')
-COOKIECUTTER_TEST_FRAGMENTS_PATH = join('../data', 'raw', 'test')
+COOKIECUTTER_TRAIN_FRAGMENTS_PATH = join('data', 'raw', 'train')
+COOKIECUTTER_TEST_FRAGMENTS_PATH = join('data', 'raw', 'test')
 
-PARENT_TRAIN_FRAGMENTS_PATH = join(pardir, pardir, '../data', 'raw', 'train')
-PARENT_TEST_FRAGMENTS_PATH = join(pardir, pardir, '../data', 'raw', 'test')
+PARENT_TRAIN_FRAGMENTS_PATH = join(pardir, pardir, 'data', 'raw', 'train')
+PARENT_TEST_FRAGMENTS_PATH = join(pardir, pardir, 'data', 'raw', 'test')
 
 # NOTEBOOKS DIRECTORIES
-NOTEBOOK_TRAIN_FRAGMENTS_PATH = join(pardir, '../data', 'raw', 'train')
-NOTEBOOK_TEST_FRAGMENTS_PATH = join(pardir, '../data', 'raw', 'test')
+NOTEBOOK_TRAIN_FRAGMENTS_PATH = join(pardir, 'data', 'raw', 'train')
+NOTEBOOK_TEST_FRAGMENTS_PATH = join(pardir, 'data', 'raw', 'test')
 
 # DIRECTORIES
 MODELS_DIR = KAGGLE_WORKING_DIR if exists(KAGGLE_WORKING_DIR) else COOKIECUTTER_MODELS_DIR
