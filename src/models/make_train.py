@@ -115,7 +115,7 @@ if __name__ == '__main__':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
             entity='rosia-lab',
-            group='test',
+            group='UNet3D',
             config={
                 'model_name': 'UNet3D',
                 'num_blocks': cst.NUM_BLOCKS,
