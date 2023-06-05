@@ -56,6 +56,7 @@ def get_dataloaders():
         num_slices=wandb.config.num_slices,
         slices_list=[],
         random_slices=wandb.config.random_slices,
+        sorted_slices=wandb.config.sorted_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
         device=device
@@ -76,6 +77,7 @@ def get_dataloaders():
         num_slices=wandb.config.num_slices,
         slices_list=wandb.config.slices_list,
         random_slices=wandb.config.random_slices,
+        sorted_slices=wandb.config.sorted_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
         device=device
@@ -131,6 +133,7 @@ if __name__ == '__main__':
                 'dice_threshold': cst.DICE_THRESHOLD,
                 'tile_size': cst.TILE_SIZE,
                 'num_slices': cst.NUM_SLICES,
+                'sorted_slices': cst.SORTED_SLICES,
                 'random_slices': cst.RANDOM_SLICES,
                 'selection_thr': cst.SELECTION_THR,
                 'augmentation': cst.AUGMENTATION,
