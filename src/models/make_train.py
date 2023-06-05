@@ -54,6 +54,7 @@ def get_dataloaders():
         fragments=wandb.config.train_fragments,
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
+        slices_list=[],
         random_slices=wandb.config.random_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
@@ -67,10 +68,13 @@ def get_dataloaders():
         drop_last=True
     )
 
+    wandb.config['slices_list'] = train_dataset.slices
+
     val_dataset = DatasetVesuvius(
         fragments=wandb.config.val_fragments,
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
+        slices_list=wandb.config.slices_list,
         random_slices=wandb.config.random_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
