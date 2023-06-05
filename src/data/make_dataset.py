@@ -16,20 +16,21 @@ from tqdm import tqdm
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision import transforms as T
 
-from src.utils import get_device, get_padding
-from src.constant import TILE_SIZE, TRAIN_FRAGMENTS_PATH
+from src.utils import get_padding
+from src.constant import TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
-    def __init__(self, fragments, tile_size, num_slices, slices_list, random_slices, selection_thr, augmentation, device):
+    def __init__(self, fragments, tile_size, num_slices, slices_list, random_slices, reverse_slices, selection_thr, augmentation, device):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
         self.slices_list = slices_list
         self.random_slices = random_slices
+        self.reverse_slices = reverse_slices
         self.selection_thr = selection_thr
         self.augmentation = augmentation
         self.device = device
@@ -50,15 +51,16 @@ class DatasetVesuvius(Dataset):
         )
 
     def make_slices(self):
+        total_slices = 65
+        slices = [i for i in range(total_slices)]
+
         if self.slices_list:
             slices = self.slices_list
         else:
-            total_slices = 65
-            slices = [i for i in range(total_slices)]
             if self.random_slices:
-                slices = sorted(random.sample(slices, k=self.num_slices), reverse=True)
+                slices = sorted(random.sample(slices, k=self.num_slices), reverse=self.reverse_slices)
             else:
-                slices = sorted(slices, reverse=True)[:self.num_slices]
+                slices = sorted(slices[:self.num_slices], reverse=self.reverse_slices)
 
         return slices
 
@@ -137,26 +139,3 @@ class DatasetVesuvius(Dataset):
             mask = torch.squeeze(self.transforms(mask))
 
         return fragment, bbox, mask, image
-
-
-if __name__ == "__main__":
-    device = get_device()
-
-    train_dataset = DatasetVesuvius(
-        fragments=['1'],
-        tile_size=TILE_SIZE,
-        num_slices=2,
-        random_slices=False,
-        selection_thr=0.0,
-        augmentation=False,
-        device=device,
-    )
-
-    train_dataloader = DataLoader(dataset=train_dataset, batch_size=8)
-
-    for i, (fragments, bboxes, masks, images) in enumerate(train_dataloader):
-        print(train_dataset.slices)
-        print(fragments)
-        print(bboxes.shape)
-        print(masks.shape)
-        print(images.shape)

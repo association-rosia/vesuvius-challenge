@@ -1,57 +1,78 @@
-method: bayes
-
-metric:
-  name: val/loss
-  goal: minimize
-
 program: src/models/make_train.py
 
-parameters:
+method: random
 
-  # Pytorch model parameters
-  # Model name
+metric:
+  goal: minimize
+  name: val/loss
+
+early_terminate:
+  type: hyperband
+  min_iter: 2
+  eta: 2
+
+parameters:
   model_name:
     distribution: constant
     value: 'UNet3D'
 
-  # UNet3D number of Encoder/Decoder block
-  num_block:
-    distribution: categorical
-    values: [1, 2, 3]
+  num_blocks:
+    distribution: constant
+    value: 3
 
-  # Lightning model parameters
-  # Combined BCE Loss Weight (Dice Weight: 1 - bce_weight)
-  bce_weight:
-    distribution: uniform
-    min: 0
-    max: 1
-
-  # ReduceOnPlateau patience
-  scheduler_patience:
-    distribution: int_uniform
-    min: 2
-    max: 10
-
-  # AdamW Learning Rate
-  learning_rate:
-    distribution: uniform
-    min: 0.0001
-    max: 0.001
-
-  # F05Score Metrics Threshold
-  f05score_threshold:
-    distribution: uniform
-    min: 0.1
-    max: 0.9
-
-  # Trainer parameters
-  # Number of max epochs
   epochs:
     distribution: constant
-    value: 30
+    value: 20
 
-  # Dataset Parameters
-  # Batch Size
   batch_size:
+    distribution: constant
+    value: 4
+
+  learning_rate:
+    distribution: uniform
+    min: 1e-8
+    max: 1e-6
+
+  scheduler_patience:
+    distribution: constant
+    value: 3
+
+  bce_weight:
+    distribution: constant
+    value: 0.5
+
+  dice_threshold:
+    distribution: constant
+    value: 0.5
+
+  tile_size:
+    distribution: constant
+    value: 256
+
+  num_slices:
+    distribution: constant
+    value: 8
+
+  random_slices:
+    distribution: constant
+    value: true
+
+  reverse_slices:
     distribution: categorical
-    values: [16, 32, 64, 128]
+    values: [true, false]
+
+  selection_thr:
+    distribution: constant
+    value: 0.05
+
+  augmentation:
+    distribution: constant
+    value: true
+
+  train_fragments:
+    distribution: constant
+    value: ['1', '2']
+
+  val_fragments:
+    distribution: constant
+    value: ['3']
