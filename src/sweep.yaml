@@ -57,7 +57,7 @@ parameters:
     distribution: constant
     value: true
 
-  sorted_slices:
+  reserve_slices:
     distribution: categorical
     values: [true, false]
 

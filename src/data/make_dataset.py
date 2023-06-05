@@ -24,13 +24,13 @@ from src.constant import TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
-    def __init__(self, fragments, tile_size, num_slices, slices_list, random_slices, sorted_slices, selection_thr, augmentation, device):
+    def __init__(self, fragments, tile_size, num_slices, slices_list, random_slices, reverse_slices, selection_thr, augmentation, device):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
         self.slices_list = slices_list
         self.random_slices = random_slices
-        self.sorted_slices = sorted_slices
+        self.reverse_slices = reverse_slices
         self.selection_thr = selection_thr
         self.augmentation = augmentation
         self.device = device
@@ -58,12 +58,9 @@ class DatasetVesuvius(Dataset):
             slices = self.slices_list
         else:
             if self.random_slices:
-                slices = random.sample(slices, k=self.num_slices)
+                slices = sorted(random.sample(slices, k=self.num_slices), reverse=self.reverse_slices)
             else:
-                slices = slices[:self.num_slices]
-
-            if self.sorted_slices:
-                slices = sorted(slices, reverse=True)
+                slices = sorted(slices[:self.num_slices], reverse=self.reverse_slices)
 
         return slices
 
