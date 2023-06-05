@@ -57,7 +57,7 @@ parameters:
     distribution: constant
     value: true
 
-  reserve_slices:
+  reverse_slices:
     distribution: categorical
     values: [true, false]
 
