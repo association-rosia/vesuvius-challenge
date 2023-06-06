@@ -1,6 +1,6 @@
 program: src/models/make_train.py
 
-method: random
+method: bayes
 
 metric:
   goal: minimize
@@ -14,11 +14,7 @@ early_terminate:
 parameters:
   model_name:
     distribution: constant
-    value: 'UNet3D'
-
-  num_blocks:
-    distribution: constant
-    value: 3
+    value: 'EfficientUNetV2'
 
   epochs:
     distribution: constant
@@ -26,44 +22,49 @@ parameters:
 
   batch_size:
     distribution: constant
-    value: 4
+    value: 16
 
   learning_rate:
     distribution: uniform
     min: 1e-8
-    max: 1e-6
+    max: 1e-3
 
   scheduler_patience:
     distribution: constant
-    value: 3
+    value: 0
 
   bce_weight:
-    distribution: constant
-    value: 0.5
+    distribution: uniform
+    min: 0
+    max: 1
 
   dice_threshold:
-    distribution: constant
-    value: 0.5
+    distribution: uniform
+    min: 0
+    max: 1
 
   tile_size:
-    distribution: constant
-    value: 256
+    distribution: categorical
+    values: [128, 256, 512]
 
   num_slices:
-    distribution: constant
-    value: 8
+    distribution: int_uniform
+    min: 3
+    max: 32
 
-  random_slices:
-    distribution: constant
-    value: true
+  start_slice:
+    distribution: int_uniform
+    min: 0
+    max: 61
 
   reverse_slices:
     distribution: categorical
     values: [true, false]
 
   selection_thr:
-    distribution: constant
-    value: 0.05
+    distribution: uniform
+    min: 0.01
+    max: 0.1
 
   augmentation:
     distribution: constant

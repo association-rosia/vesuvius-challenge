@@ -24,12 +24,12 @@ from src.constant import TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
-    def __init__(self, fragments, tile_size, num_slices, slices_list, random_slices, reverse_slices, selection_thr, augmentation, device):
+    def __init__(self, fragments, tile_size, num_slices, slices_list, start_slice, reverse_slices, selection_thr, augmentation, device):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
         self.slices_list = slices_list
-        self.random_slices = random_slices
+        self.start_slice = start_slice
         self.reverse_slices = reverse_slices
         self.selection_thr = selection_thr
         self.augmentation = augmentation
@@ -57,10 +57,7 @@ class DatasetVesuvius(Dataset):
         if self.slices_list:
             slices = self.slices_list
         else:
-            if self.random_slices:
-                slices = sorted(random.sample(slices, k=self.num_slices), reverse=self.reverse_slices)
-            else:
-                slices = sorted(slices[:self.num_slices], reverse=self.reverse_slices)
+            slices = sorted(slices[self.start_slice:self.start_slice+self.num_slices], reverse=self.reverse_slices)
 
         return slices
 
@@ -129,7 +126,7 @@ class DatasetVesuvius(Dataset):
         x0, y0, x1, y1 = bbox
 
         mask = torch.unsqueeze(self.data[fragment]['mask'][y0:y1, x0:x1] / 255.0, dim=0)
-        image = torch.unsqueeze(self.data[fragment]['image'][:, y0:y1, x0:x1] / 255.0, dim=0)
+        image = self.data[fragment]['image'][:, y0:y1, x0:x1] / 255.0
 
         if self.augmentation:
             seed = random.randint(0, 2 ** 32)
