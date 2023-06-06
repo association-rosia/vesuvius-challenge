@@ -41,8 +41,8 @@ class F05Score(torchmetrics.Metric):
         bboxes = torch.cat(self.bboxes, dim=0)
         reconstructed_preds = reconstruct_outputs(preds, bboxes, self.fragments, self.fragments_shape)
 
-        vector_preds = torch.FloatTensor().to(device=self.device)
-        vector_target = torch.FloatTensor().to(device=self.device)
+        vector_preds = torch.Tensor().to(device=self.device)
+        vector_target = torch.Tensor().to(device=self.device)
 
         for fragment_id in self.fragments_shape.keys():
             mask_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragment_id, 'mask.png')
@@ -52,7 +52,7 @@ class F05Score(torchmetrics.Metric):
 
             target_path = os.path.join(TRAIN_FRAGMENTS_PATH, fragment_id, 'inklabels.png')
             loaded_target = torch.from_numpy(cv2.imread(target_path, cv2.IMREAD_GRAYSCALE) / 255.0)
-            loaded_target = loaded_target.to(self.device)
+            loaded_target = loaded_target.to(torch.float32).to(self.device)
             vector_target = torch.cat((vector_target, loaded_target.view(-1)), dim=0)
 
         # Calculate F0.5 score between sub images and sub label target
@@ -70,13 +70,13 @@ class F05Score(torchmetrics.Metric):
 
             sub_f05_score = f05score(preds, target)
             if best_sub_f05_score < sub_f05_score:
-                best_sub_f05_threshold = threshold
-                best_sub_f05_score = sub_f05_score
+                best_sub_f05_threshold = np.float32(threshold)
+                best_sub_f05_score = np.float32(sub_f05_score)
 
             f05_score = f05score(vector_preds, vector_target)
             if best_f05_score < f05_score:
-                best_f05_threshold = threshold
-                best_f05_score = f05_score
+                best_f05_threshold = np.float32(threshold)
+                best_f05_score = np.float32(f05_score)
 
         return best_sub_f05_threshold, best_sub_f05_score, best_f05_threshold, best_f05_score
 

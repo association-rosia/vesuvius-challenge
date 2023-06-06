@@ -11,6 +11,7 @@ import pytorch_lightning as pl
 from src.models.losses import BCEDiceWithLogitsLoss
 from src.models.metrics import F05Score
 from src.models.unet3d import Unet3d
+from src.models.efficienunetv2 import EfficientUNetV2
 
 
 class LightningVesuvius(pl.LightningModule):
@@ -27,6 +28,8 @@ class LightningVesuvius(pl.LightningModule):
         # Model
         if model_name == 'UNet3D':
             self.pytorch_model = Unet3d(**model_params)
+        elif model_name == 'EfficientUNetV2':
+            self.pytorch_model = EfficientUNetV2(**model_params)
 
         self.learning_rate = learning_rate
         self.scheduler_patience = scheduler_patience
@@ -55,23 +58,23 @@ class LightningVesuvius(pl.LightningModule):
 
         return loss
 
-    def on_validation_epoch_end(self) -> None:
-        # evaluate model on the validation dataset
-        f05_threshold, f05_score, sub_f05_threshold, sub_f05_score = self.metric.compute()
-
-        # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
-        metrics = {
-            'val/F05Threshold': f05_threshold,
-            'val/F05Score': f05_score,
-            'val/SubF05Threshold': sub_f05_threshold,
-            'val/SubF05Score': sub_f05_score
-        }
-
-        # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
-        self.log_dict(metrics, on_step=False, on_epoch=True)
-        self.metric.reset()
-
-        return metrics
+    # def on_validation_epoch_end(self) -> None:
+    #     # evaluate model on the validation dataset
+    #     f05_threshold, f05_score, sub_f05_threshold, sub_f05_score = self.metric.compute()
+    #
+    #     # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
+    #     metrics = {
+    #         'val/F05Threshold': f05_threshold,
+    #         'val/F05Score': f05_score,
+    #         'val/SubF05Threshold': sub_f05_threshold,
+    #         'val/SubF05Score': sub_f05_score
+    #     }
+    #
+    #     # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
+    #     self.log_dict(metrics, on_step=False, on_epoch=True)
+    #     self.metric.reset()
+    #
+    #     return metrics
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)

@@ -25,7 +25,6 @@ def reconstruct_outputs(tiles, bboxes, fragments, fragments_shape):
 
     for i in range(tiles.shape[0]):
         x0, y0, x1, y1 = bboxes[i]
-
         reconstructed_outputs[fragments[i]][y0:y1, x0:x1] += tiles[i, :, :]
         count_map[fragments[i]][y0:y1, x0:x1] += 1
 

@@ -33,6 +33,10 @@ def get_model():
             'num_blocks': wandb.config.num_blocks,
             'inputs_size': wandb.config.tile_size,
         }
+    elif wandb.config.model_name == 'EfficientUNetV2':
+        model_params = {
+            'in_channels': wandb.config.num_slices,
+        }
 
     lightning_model = LightningVesuvius(
         model_name=wandb.config.model_name,
@@ -55,7 +59,7 @@ def get_dataloaders():
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
         slices_list=[],
-        random_slices=wandb.config.random_slices,
+        start_slice=min(wandb.config.start_slice, 61),
         reverse_slices=wandb.config.reverse_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
@@ -76,7 +80,7 @@ def get_dataloaders():
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
         slices_list=wandb.config.slices_list,
-        random_slices=wandb.config.random_slices,
+        start_slice=min(wandb.config.start_slice, 61),
         reverse_slices=wandb.config.reverse_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
@@ -110,6 +114,7 @@ def get_trainer():
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
+        precision=32
     )
 
     return trainer
@@ -121,10 +126,10 @@ if __name__ == '__main__':
         wandb.init(
             project='vesuvius-challenge-ink-detection',
             entity='rosia-lab',
-            group='UNet3D',
+            group='EfficientUNetV2',
             config={
-                'model_name': 'UNet3D',
-                'num_blocks': cst.NUM_BLOCKS,
+                'model_name': cst.MODEL_NAME,
+                # 'num_blocks': cst.NUM_BLOCKS,
                 'epochs': cst.EPOCHS,
                 'batch_size': cst.BATCH_SIZE,
                 'learning_rate': cst.LEARNING_RATE,
@@ -134,7 +139,7 @@ if __name__ == '__main__':
                 'tile_size': cst.TILE_SIZE,
                 'num_slices': cst.NUM_SLICES,
                 'reverse_slices': cst.REVERSE_SLICES,
-                'random_slices': cst.RANDOM_SLICES,
+                'start_slice': cst.START_SLICE,
                 'selection_thr': cst.SELECTION_THR,
                 'augmentation': cst.AUGMENTATION,
                 'train_fragments': cst.TRAIN_FRAGMENTS,
