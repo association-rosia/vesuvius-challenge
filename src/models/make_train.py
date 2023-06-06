@@ -147,6 +147,9 @@ if __name__ == '__main__':
             },
         )
     else:
-        wandb.init(project='vesuvius-challenge-ink-detection', entity='rosia-lab')
+        wandb.init(project='vesuvius-challenge-ink-detection',
+                   entity='rosia-lab',
+                   group='EfficientUNetV2'
+        )
 
     main()

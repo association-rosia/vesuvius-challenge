@@ -8,8 +8,7 @@ metric:
 
 early_terminate:
   type: hyperband
-  min_iter: 2
-  eta: 2
+  min_iter: 3
 
 parameters:
   model_name:
@@ -18,7 +17,7 @@ parameters:
 
   epochs:
     distribution: constant
-    value: 20
+    value: 10
 
   batch_size:
     distribution: constant
@@ -30,8 +29,9 @@ parameters:
     max: 1e-3
 
   scheduler_patience:
-    distribution: constant
-    value: 0
+    distribution: int_uniform
+    min: 1
+    max: 5
 
   bce_weight:
     distribution: uniform
