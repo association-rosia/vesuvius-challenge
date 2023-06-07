@@ -141,7 +141,7 @@ if __name__ == '__main__':
                 'augmentation': cst.AUGMENTATION,
                 'train_fragments': cst.TRAIN_FRAGMENTS,
                 'val_fragments': cst.VAL_FRAGMENTS,
-            },
+            }
         )
     else:
         wandb.init(project='vesuvius-challenge-ink-detection',
