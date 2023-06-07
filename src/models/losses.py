@@ -13,13 +13,8 @@ class BCEDiceWithLogitsLoss(nn.Module):
         self.dice_loss = DiceWithLogitsLoss(threshold=self.dice_threshold)
 
     def forward(self, predictions, targets):
-        # Compute binary cross-entropy (BCE) loss
         bce_loss = self.bce_loss(predictions, targets)
-
-        # Compute Dice loss
         dice_loss = self.dice_loss(predictions, targets)
-
-        # Combine the losses using weighted sum
         bce_dice_loss = self.bce_weight * bce_loss + self.dice_weight * dice_loss
 
         return bce_dice_loss
@@ -35,5 +30,6 @@ class DiceWithLogitsLoss(nn.Module):
     def forward(self, preds, target):
         target = target.to(dtype=torch.uint8)
         preds = self.sigmoid(preds)
+        loss = 1 - self.dice(preds, target)
         
-        return 1 - self.dice(preds, target)
+        return loss
