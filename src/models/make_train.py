@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
 import torch
@@ -100,8 +101,8 @@ def get_dataloaders():
 def get_trainer():
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
-        monitor='val/loss',
-        mode='min',
+        monitor='val/F05Score',
+        mode='max',
         dirpath=cst.MODELS_DIR,
         filename=f'{wandb.run.name}-{wandb.run.id}',
     )
@@ -150,6 +151,6 @@ if __name__ == '__main__':
         wandb.init(project='vesuvius-challenge-ink-detection',
                    entity='rosia-lab',
                    group='EfficientUNetV2'
-        )
+                   )
 
     main()

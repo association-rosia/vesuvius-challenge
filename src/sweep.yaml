@@ -3,12 +3,13 @@ program: src/models/make_train.py
 method: bayes
 
 metric:
-  goal: minimize
-  name: val/loss
+  goal: maximize
+  name: val/F05Score
 
 early_terminate:
   type: hyperband
-  min_iter: 3
+  min_iter: 2
+  eta: 2
 
 parameters:
   model_name:
@@ -17,7 +18,7 @@ parameters:
 
   epochs:
     distribution: constant
-    value: 10
+    value: 5
 
   batch_size:
     distribution: constant
@@ -44,13 +45,13 @@ parameters:
     max: 1
 
   tile_size:
-    distribution: categorical
-    values: [128, 256, 512]
+    distribution: constant
+    values: 256
 
   num_slices:
     distribution: int_uniform
     min: 3
-    max: 32
+    max: 24
 
   start_slice:
     distribution: int_uniform

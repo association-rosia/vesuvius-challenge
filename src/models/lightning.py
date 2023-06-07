@@ -58,23 +58,23 @@ class LightningVesuvius(pl.LightningModule):
 
         return loss
 
-    # def on_validation_epoch_end(self) -> None:
-    #     # evaluate model on the validation dataset
-    #     f05_threshold, f05_score, sub_f05_threshold, sub_f05_score = self.metric.compute()
-    #
-    #     # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
-    #     metrics = {
-    #         'val/F05Threshold': f05_threshold,
-    #         'val/F05Score': f05_score,
-    #         'val/SubF05Threshold': sub_f05_threshold,
-    #         'val/SubF05Score': sub_f05_score
-    #     }
-    #
-    #     # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
-    #     self.log_dict(metrics, on_step=False, on_epoch=True)
-    #     self.metric.reset()
-    #
-    #     return metrics
+    def on_validation_epoch_end(self) -> None:
+        # evaluate model on the validation dataset
+        f05_threshold, f05_score, sub_f05_threshold, sub_f05_score = self.metric.compute()
+
+        # self.best_f05_score = f05_score if self.best_f05_score is None else max(f05_score, self.best_f05_score)
+        metrics = {
+            'val/F05Threshold': f05_threshold,
+            'val/F05Score': f05_score,
+            'val/SubF05Threshold': sub_f05_threshold,
+            'val/SubF05Score': sub_f05_score
+        }
+
+        # self.log('val/best_F05Score', self.best_f05_score, prog_bar=True)
+        self.log_dict(metrics, on_step=False, on_epoch=True)
+        self.metric.reset()
+
+        return metrics
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)

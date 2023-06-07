@@ -71,12 +71,12 @@ class F05Score(torchmetrics.Metric):
             sub_f05_score = f05score(preds, target)
             if best_sub_f05_score < sub_f05_score:
                 best_sub_f05_threshold = np.float32(threshold)
-                best_sub_f05_score = np.float32(sub_f05_score)
+                best_sub_f05_score = sub_f05_score.to(torch.float32)
 
             f05_score = f05score(vector_preds, vector_target)
             if best_f05_score < f05_score:
                 best_f05_threshold = np.float32(threshold)
-                best_f05_score = np.float32(f05_score)
+                best_f05_score = f05_score.to(torch.float32)
 
         return best_sub_f05_threshold, best_sub_f05_score, best_f05_threshold, best_f05_score
 
