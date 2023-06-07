@@ -43,7 +43,6 @@ def get_model():
         model_name=wandb.config.model_name,
         model_params=model_params,
         learning_rate=wandb.config.learning_rate,
-        scheduler_patience=wandb.config.scheduler_patience,
         bce_weight=wandb.config.bce_weight,
         dice_threshold=wandb.config.dice_threshold,
         val_fragments_shape=get_fragments_shape(wandb.config.val_fragments, wandb.config.tile_size),
@@ -59,8 +58,8 @@ def get_dataloaders():
         fragments=wandb.config.train_fragments,
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
-        slices_list=[],
-        start_slice=min(wandb.config.start_slice, 61),
+        slices_list=None,
+        start_slice=min(wandb.config.start_slice, 64 - wandb.config.num_slices),
         reverse_slices=wandb.config.reverse_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
@@ -81,7 +80,7 @@ def get_dataloaders():
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
         slices_list=wandb.config.slices_list,
-        start_slice=min(wandb.config.start_slice, 61),
+        start_slice=None,
         reverse_slices=wandb.config.reverse_slices,
         selection_thr=wandb.config.selection_thr,
         augmentation=wandb.config.augmentation,
@@ -111,11 +110,10 @@ def get_trainer():
 
     trainer = pl.Trainer(
         accelerator='gpu',
-        val_check_interval=0.25,
         max_epochs=wandb.config.epochs,
         callbacks=[lr_monitor, checkpoint_callback],
         logger=WandbLogger(),
-        precision=32
+        log_every_n_steps=1
     )
 
     return trainer
@@ -130,11 +128,9 @@ if __name__ == '__main__':
             group='EfficientUNetV2',
             config={
                 'model_name': cst.MODEL_NAME,
-                # 'num_blocks': cst.NUM_BLOCKS,
                 'epochs': cst.EPOCHS,
                 'batch_size': cst.BATCH_SIZE,
                 'learning_rate': cst.LEARNING_RATE,
-                'scheduler_patience': cst.SCHEDULER_PATIENCE,
                 'bce_weight': cst.BCE_WEIGHT,
                 'dice_threshold': cst.DICE_THRESHOLD,
                 'tile_size': cst.TILE_SIZE,
