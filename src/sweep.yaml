@@ -25,8 +25,8 @@ parameters:
     value: 16
 
   learning_rate:
-    distribution: uniform
-    min: 1e-8
+    distribution: log_uniform
+    min: 1e-5
     max: 1e-3
 
   scheduler_patience:
@@ -46,7 +46,7 @@ parameters:
 
   tile_size:
     distribution: constant
-    values: 256
+    value: 256
 
   num_slices:
     distribution: int_uniform
