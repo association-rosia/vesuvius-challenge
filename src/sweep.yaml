@@ -4,7 +4,7 @@ method: bayes
 
 metric:
   goal: maximize
-  name: val/F05Score
+  name: val/f05_score
 
 early_terminate:
   type: hyperband
@@ -14,30 +14,33 @@ early_terminate:
 parameters:
   model_name:
     distribution: constant
-    value: 'EfficientUNetV2'
+    value: 'EfficientUNetV2_M'
 
   epochs:
     distribution: constant
-    value: 10
+    value: 25
 
   batch_size:
     distribution: constant
     value: 16
 
   learning_rate:
-    distribution: log_uniform
-    min: 1e-4
-    max: 1e-2
+    distribution: q_uniform
+    min: 1e-5
+    max: 1e-3
+    q: 1e-5
 
   bce_weight:
-    distribution: uniform
+    distribution: q_uniform
     min: 0
     max: 1
+    q: 0.01
 
   dice_threshold:
-    distribution: uniform
+    distribution: q_uniform
     min: 0
     max: 1
+    q: 0.01
 
   tile_size:
     distribution: constant
@@ -45,8 +48,8 @@ parameters:
 
   num_slices:
     distribution: int_uniform
-    min: 3
-    max: 24
+    min: 5
+    max: 15
 
   start_slice:
     distribution: int_uniform
@@ -58,9 +61,8 @@ parameters:
     values: [true, false]
 
   selection_thr:
-    distribution: uniform
-    min: 0.01
-    max: 0.1
+    distribution: constant
+    value: 0.05
 
   augmentation:
     distribution: constant
@@ -70,6 +72,6 @@ parameters:
     distribution: constant
     value: ['1', '2']
 
-  val_fragments:
+  val_fragment:
     distribution: constant
-    value: ['3']
+    value: '3'

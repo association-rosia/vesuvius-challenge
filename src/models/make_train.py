@@ -7,11 +7,11 @@ import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 from src.data.make_dataset import DatasetVesuvius
 from src.models.lightning import LightningVesuvius
-from src.utils import get_fragments_shape, get_device
+from src.utils import get_fragment_shape, get_device
 
 import src.constant as cst
 
@@ -34,7 +34,7 @@ def get_model():
             'num_blocks': wandb.config.num_blocks,
             'inputs_size': wandb.config.tile_size,
         }
-    elif wandb.config.model_name == 'EfficientUNetV2':
+    elif 'EfficientUNetV2' in wandb.config.model_name:
         model_params = {
             'in_channels': wandb.config.num_slices,
         }
@@ -45,7 +45,10 @@ def get_model():
         learning_rate=wandb.config.learning_rate,
         bce_weight=wandb.config.bce_weight,
         dice_threshold=wandb.config.dice_threshold,
-        val_fragments_shape=get_fragments_shape(wandb.config.val_fragments, wandb.config.tile_size),
+        val_fragment_id=wandb.config.val_fragment,
+        val_fragment_shape=get_fragment_shape(cst.TRAIN_FRAGMENTS_PATH,
+                                              wandb.config.val_fragment,
+                                              wandb.config.tile_size),
     )
 
     return lightning_model
@@ -76,7 +79,7 @@ def get_dataloaders():
     wandb.config['slices_list'] = train_dataset.slices
 
     val_dataset = DatasetVesuvius(
-        fragments=wandb.config.val_fragments,
+        fragments=[wandb.config.val_fragment],
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
         slices_list=wandb.config.slices_list,
@@ -100,18 +103,16 @@ def get_dataloaders():
 def get_trainer():
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
-        monitor='val/F05Score',
+        monitor='val/f05_score',
         mode='max',
         dirpath=cst.MODELS_DIR,
         filename=f'{wandb.run.name}-{wandb.run.id}',
     )
 
-    lr_monitor = LearningRateMonitor(logging_interval='epoch')
-
     trainer = pl.Trainer(
         accelerator='gpu',
         max_epochs=wandb.config.epochs,
-        callbacks=[lr_monitor, checkpoint_callback],
+        callbacks=[checkpoint_callback],
         logger=WandbLogger(),
         log_every_n_steps=1
     )
@@ -140,7 +141,7 @@ if __name__ == '__main__':
                 'selection_thr': cst.SELECTION_THR,
                 'augmentation': cst.AUGMENTATION,
                 'train_fragments': cst.TRAIN_FRAGMENTS,
-                'val_fragments': cst.VAL_FRAGMENTS,
+                'val_fragment': cst.VAL_FRAGMENT,
             },
         )
     else:
