@@ -34,7 +34,7 @@ def get_model():
             'num_blocks': wandb.config.num_blocks,
             'inputs_size': wandb.config.tile_size,
         }
-    elif wandb.config.model_name == 'EfficientUNetV2':
+    elif 'EfficientUNetV2' in wandb.config.model_name:
         model_params = {
             'in_channels': wandb.config.num_slices,
         }

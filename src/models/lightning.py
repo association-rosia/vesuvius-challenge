@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 from src.models.losses import BCEDiceWithLogitsLoss
 from src.models.metrics import F05Score
 from src.models.unet3d import Unet3d
-from src.models.efficienunetv2 import EfficientUNetV2
+from src.models.efficienunetv2 import EfficientUNetV2_L, EfficientUNetV2_M, EfficientUNetV2_S
 
 
 class LightningVesuvius(pl.LightningModule):
@@ -20,8 +20,12 @@ class LightningVesuvius(pl.LightningModule):
         # Model
         if model_name == 'UNet3D':
             self.model = Unet3d(**model_params)
-        elif model_name == 'EfficientUNetV2':
-            self.model = EfficientUNetV2(**model_params)
+        elif model_name == 'EfficientUNetV2_L':
+            self.model = EfficientUNetV2_L(**model_params)
+        elif model_name == 'EfficientUNetV2_M':
+            self.model = EfficientUNetV2_M(**model_params)
+        elif model_name == 'EfficientUNetV2_S':
+                self.model = EfficientUNetV2_S(**model_params)
 
         self.learning_rate = learning_rate
         self.criterion = BCEDiceWithLogitsLoss(bce_weight=bce_weight, dice_threshold=dice_threshold)
