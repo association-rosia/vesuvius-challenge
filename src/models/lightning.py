@@ -3,6 +3,8 @@ import sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
+import cv2
+
 import torch.nn as nn
 from torch.optim import AdamW
 import pytorch_lightning as pl
@@ -16,7 +18,8 @@ import wandb
 
 
 class LightningVesuvius(pl.LightningModule):
-    def __init__(self, model_name, model_params, learning_rate, bce_weight, dice_threshold, val_fragment_shape):
+    def __init__(self, model_name, model_params, learning_rate, bce_weight,
+                 dice_threshold, val_fragment_id, val_fragment_shape):
         super().__init__()
 
         # Model
@@ -27,11 +30,11 @@ class LightningVesuvius(pl.LightningModule):
         elif model_name == 'EfficientUNetV2_M':
             self.model = EfficientUNetV2_M(**model_params)
         elif model_name == 'EfficientUNetV2_S':
-                self.model = EfficientUNetV2_S(**model_params)
+            self.model = EfficientUNetV2_S(**model_params)
 
         self.learning_rate = learning_rate
         self.criterion = BCEDiceWithLogitsLoss(bce_weight=bce_weight, dice_threshold=dice_threshold)
-        self.metric = F05Score(val_fragment_shape)
+        self.metric = F05Score(val_fragment_id, val_fragment_shape)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, inputs):
@@ -58,7 +61,7 @@ class LightningVesuvius(pl.LightningModule):
         return loss
 
     def on_validation_epoch_end(self) -> None:
-        f05_threshold, f05_score, sub_f05_threshold, sub_f05_score, reconstructed_mask, predicted_mask = self.metric.compute()
+        f05_threshold, f05_score, sub_f05_threshold, sub_f05_score, reconstructed_pred = self.metric.compute()
 
         metrics = {
             'val/F05Threshold': f05_threshold,
@@ -68,8 +71,7 @@ class LightningVesuvius(pl.LightningModule):
         }
 
         self.log_dict(metrics, on_epoch=True)
-        
-        self.logger.log_image(key="samples", images=[reconstructed_mask, predicted_mask])
+        # self.logger.log_image(key="samples", images=[reconstructed_pred])
 
         self.metric.reset()
 

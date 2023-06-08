@@ -14,7 +14,7 @@ early_terminate:
 parameters:
   model_name:
     distribution: constant
-    value: 'EfficientUNetV2'
+    value: ['EfficientUNetV2_S', 'EfficientUNetV2_M']
 
   epochs:
     distribution: constant
@@ -25,9 +25,9 @@ parameters:
     value: 16
 
   learning_rate:
-    distribution: log_uniform
-    min: 1e-4
-    max: 1e-2
+    distribution: uniform
+    min: 5e-5
+    max: 5e-3
 
   bce_weight:
     distribution: uniform
@@ -58,9 +58,8 @@ parameters:
     values: [true, false]
 
   selection_thr:
-    distribution: uniform
-    min: 0.01
-    max: 0.1
+    distribution: constant
+    value: 0.05
 
   augmentation:
     distribution: constant
@@ -72,4 +71,4 @@ parameters:
 
   val_fragments:
     distribution: constant
-    value: ['3']
+    value: '3'
