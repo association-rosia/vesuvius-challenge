@@ -3,6 +3,8 @@ import sys
 parent = os.path.abspath(os.path.curdir)
 sys.path.insert(1, parent)
 
+import cv2
+
 import torch.nn as nn
 from torch.optim import AdamW
 import pytorch_lightning as pl
@@ -10,22 +12,29 @@ import pytorch_lightning as pl
 from src.models.losses import BCEDiceWithLogitsLoss
 from src.models.metrics import F05Score
 from src.models.unet3d import Unet3d
-from src.models.efficienunetv2 import EfficientUNetV2
+from src.models.efficienunetv2 import EfficientUNetV2_L, EfficientUNetV2_M, EfficientUNetV2_S
+
+import wandb
 
 
 class LightningVesuvius(pl.LightningModule):
-    def __init__(self, model_name, model_params, learning_rate, bce_weight, dice_threshold, val_fragments_shape):
+    def __init__(self, model_name, model_params, learning_rate, bce_weight,
+                 dice_threshold, val_fragment_id, val_fragment_shape):
         super().__init__()
 
         # Model
         if model_name == 'UNet3D':
             self.model = Unet3d(**model_params)
-        elif model_name == 'EfficientUNetV2':
-            self.model = EfficientUNetV2(**model_params)
+        elif model_name == 'EfficientUNetV2_L':
+            self.model = EfficientUNetV2_L(**model_params)
+        elif model_name == 'EfficientUNetV2_M':
+            self.model = EfficientUNetV2_M(**model_params)
+        elif model_name == 'EfficientUNetV2_S':
+            self.model = EfficientUNetV2_S(**model_params)
 
         self.learning_rate = learning_rate
         self.criterion = BCEDiceWithLogitsLoss(bce_weight=bce_weight, dice_threshold=dice_threshold)
-        self.metric = F05Score(val_fragments_shape)
+        self.metric = F05Score(val_fragment_id, val_fragment_shape)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, inputs):
@@ -52,16 +61,18 @@ class LightningVesuvius(pl.LightningModule):
         return loss
 
     def on_validation_epoch_end(self) -> None:
-        f05_threshold, f05_score, sub_f05_threshold, sub_f05_score = self.metric.compute()
+        f05_threshold, f05_score, sub_f05_threshold, sub_f05_score, reconstructed_pred = self.metric.compute()
 
         metrics = {
-            'val/F05Threshold': f05_threshold,
-            'val/F05Score': f05_score,
-            'val/SubF05Threshold': sub_f05_threshold,
-            'val/SubF05Score': sub_f05_score
+            'val/f05_threshold': f05_threshold,
+            'val/f05_score': f05_score,
+            'val/sub_f05_threshold': sub_f05_threshold,
+            'val/sub_f05_score': sub_f05_score
         }
 
         self.log_dict(metrics, on_epoch=True)
+        self.logger.log_image(key="val/inklabels_prediction", images=[reconstructed_pred])
+
         self.metric.reset()
 
         return metrics
