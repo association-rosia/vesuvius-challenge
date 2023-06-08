@@ -44,7 +44,7 @@ def reconstruct_outputs(tiles, bboxes, fragments, fragments_shape):
     return reconstructed_outputs
 
 
-def get_fragment_shape(fragment_dir, tile_size):
+def get_fragment_shape(fragment_dir, fragment, tile_size):
     mask_path = os.path.join(fragment_dir, 'inklabels.png')
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     padding = get_padding(mask.shape, tile_size)
@@ -53,10 +53,10 @@ def get_fragment_shape(fragment_dir, tile_size):
     return mask_pad.shape
 
 
-def get_fragments_shape(fragments, tile_size, test=False):
-    set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
+# def get_fragments_shape(fragments, tile_size, test=False):
+#     set_path = TRAIN_FRAGMENTS_PATH if not test else TEST_FRAGMENTS_PATH
 
-    return {fragment: get_fragment_shape(os.path.join(set_path, fragment), tile_size) for fragment in fragments}
+#     return {fragment: get_fragment_shape(os.path.join(set_path, fragment), tile_size) for fragment in fragments}
 
 
 def get_padding(mask_shape, tile_size, overlap=0.5):

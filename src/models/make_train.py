@@ -11,7 +11,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from src.data.make_dataset import DatasetVesuvius
 from src.models.lightning import LightningVesuvius
-from src.utils import get_fragments_shape, get_device
+from src.utils import get_fragment_shape, get_device
 
 import src.constant as cst
 
@@ -45,7 +45,7 @@ def get_model():
         learning_rate=wandb.config.learning_rate,
         bce_weight=wandb.config.bce_weight,
         dice_threshold=wandb.config.dice_threshold,
-        val_fragments_shape=get_fragments_shape(wandb.config.val_fragments, wandb.config.tile_size),
+        val_fragment_shape=get_fragment_shape(TRAIN_FRAGMENTS_PATH, wandb.config.val_fragment, wandb.config.tile_size),
     )
 
     return lightning_model
@@ -106,12 +106,10 @@ def get_trainer():
         filename=f'{wandb.run.name}-{wandb.run.id}',
     )
 
-    lr_monitor = LearningRateMonitor(logging_interval='epoch')
-
     trainer = pl.Trainer(
         accelerator='gpu',
         max_epochs=wandb.config.epochs,
-        callbacks=[lr_monitor, checkpoint_callback],
+        callbacks=[checkpoint_callback],
         logger=WandbLogger(),
         log_every_n_steps=1
     )
