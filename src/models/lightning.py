@@ -64,14 +64,14 @@ class LightningVesuvius(pl.LightningModule):
         f05_threshold, f05_score, sub_f05_threshold, sub_f05_score, reconstructed_pred = self.metric.compute()
 
         metrics = {
-            'val/F05Threshold': f05_threshold,
-            'val/F05Score': f05_score,
-            'val/SubF05Threshold': sub_f05_threshold,
-            'val/SubF05Score': sub_f05_score
+            'val/f05_threshold': f05_threshold,
+            'val/f05_score': f05_score,
+            'val/sub_f05_threshold': sub_f05_threshold,
+            'val/sub_f05_score': sub_f05_score
         }
 
         self.log_dict(metrics, on_epoch=True)
-        # self.logger.log_image(key="samples", images=[reconstructed_pred])
+        self.logger.log_image(key="val/inklabels_prediction", images=[reconstructed_pred])
 
         self.metric.reset()
 

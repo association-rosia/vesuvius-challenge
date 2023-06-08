@@ -103,7 +103,7 @@ def get_dataloaders():
 def get_trainer():
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
-        monitor='val/F05Score',
+        monitor='val/f05_score',
         mode='max',
         dirpath=cst.MODELS_DIR,
         filename=f'{wandb.run.name}-{wandb.run.id}',
