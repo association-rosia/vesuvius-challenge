@@ -57,6 +57,11 @@ class F05Score(torchmetrics.Metric):
         loaded_target = loaded_target.to(torch.float32).to(self.device)
         vector_target = torch.cat((vector_target, loaded_target.view(-1)), dim=0)
 
+        # transform = torchvision.transforms.ToPILImage()
+        # transform(mask.cpu()).show()
+        # transform(loaded_target.cpu()).show()
+        # transform(reconstructed_pred.cpu()).show()
+
         preds = preds.view(-1)
         target = torch.where(target.view(-1) > 0.5, 1, 0)
         vector_target = torch.where(vector_target > 0.5, 1, 0)
@@ -78,6 +83,8 @@ class F05Score(torchmetrics.Metric):
             if best_f05_score < f05_score:
                 best_f05_threshold = np.float32(threshold)
                 best_f05_score = f05_score.to(torch.float32)
+
+        reconstructed_pred = torch.where(reconstructed_pred > best_f05_threshold, 1, 0).to(torch.float32)
 
         return best_sub_f05_threshold, best_sub_f05_score, best_f05_threshold, best_f05_score, reconstructed_pred
 
