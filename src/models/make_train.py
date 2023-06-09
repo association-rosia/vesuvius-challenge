@@ -10,6 +10,7 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from src.data.make_dataset import DatasetVesuvius
+from src.data.make_dataset_compressed import DatasetVesuviusCompressed
 from src.models.lightning import LightningVesuvius
 from src.utils import get_fragment_shape, get_device
 
