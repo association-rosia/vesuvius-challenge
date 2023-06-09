@@ -58,7 +58,7 @@ def get_model():
 def get_dataloaders():
     device = get_device()
 
-    train_dataset = DatasetVesuvius(
+    train_dataset = DatasetVesuviusCompressed(
         fragments=wandb.config.train_fragments,
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
@@ -79,7 +79,7 @@ def get_dataloaders():
 
     wandb.config['slices_list'] = train_dataset.slices
 
-    val_dataset = DatasetVesuvius(
+    val_dataset = DatasetVesuviusCompressed(
         fragments=[wandb.config.val_fragment],
         tile_size=wandb.config.tile_size,
         num_slices=wandb.config.num_slices,
