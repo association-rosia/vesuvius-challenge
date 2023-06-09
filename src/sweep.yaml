@@ -18,7 +18,7 @@ parameters:
 
   epochs:
     distribution: constant
-    value: 25
+    value: 10
 
   batch_size:
     distribution: constant
@@ -54,7 +54,7 @@ parameters:
   start_slice:
     distribution: int_uniform
     min: 0
-    max: 61
+    max: 59
 
   reverse_slices:
     distribution: categorical
