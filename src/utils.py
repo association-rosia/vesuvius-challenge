@@ -56,4 +56,5 @@ def get_device():
         device = 'cuda'
     elif torch.backends.mps.is_available():
         device = 'mps'
+
     return torch.device(device=device)
