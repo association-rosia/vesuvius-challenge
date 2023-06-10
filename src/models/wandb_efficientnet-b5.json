@@ -1,0 +1,22 @@
+{
+    "project": "vesuvius-challenge-ink-detection",
+    "entity": "rosia-lab",
+    "group": "efficientnet-b5",
+    "config": {
+        "model_name": "efficientnet-b5",
+        "epochs": 10,
+        "batch_size": 16,
+        "learning_rate": 1e-3,
+        "bce_weight": 0.5,
+        "dice_threshold": 0.5,
+        "encoder_weights": "imagenet",
+        "tile_size": 256,
+        "num_slices": 3,
+        "reverse_slices": 0,
+        "start_slice": 0,
+        "selection_thr": 0.05,
+        "augmentation": 1,
+        "fragments": ["1", "2", "3"],
+        "n_splits": 5
+    }
+}

@@ -14,6 +14,8 @@ from src.models.metrics import F05Score
 from src.models.unet3d import Unet3d
 from src.models.efficienunetv2 import EfficientUNetV2_L, EfficientUNetV2_M, EfficientUNetV2_S
 
+import segmentation_models_pytorch as smp
+
 import wandb
 
 
@@ -30,6 +32,8 @@ class LightningVesuvius(pl.LightningModule):
             self.model = EfficientUNetV2_M(**model_params)
         elif model_name == 'EfficientUNetV2_S':
             self.model = EfficientUNetV2_S(**model_params)
+        elif model_name == 'efficientnet-b5':
+            self.model = smp.Unet(**model_params)
 
         self.learning_rate = learning_rate
         self.criterion = BCEDiceWithLogitsLoss(bce_weight=bce_weight, dice_threshold=dice_threshold)

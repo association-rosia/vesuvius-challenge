@@ -33,6 +33,8 @@ def main():
 def run_kfold():
     if sys.argv[2] == 'EfficientUNetV2':
         wandb_parameters_path = os.path.join('src', 'models', 'wandb_efficientunetv2.json')
+    elif sys.argv[2] == 'efficientnet-b5':
+        wandb_parameters_path = os.path.join('src', 'models', 'wandb_efficientnet-b5.json')
     
     with open(wandb_parameters_path, mode='r') as f:
         wandb_parameters = json.load(f)
@@ -71,6 +73,12 @@ def get_model():
     elif 'EfficientUNetV2' in wandb.config.model_name:
         model_params = {
             'in_channels': wandb.config.num_slices,
+        }
+    elif 'efficientnet' in wandb.config.model_name:
+        model_params = {
+            "in_channels": wandb.config.num_slices,
+            "encoder_weights": wandb.config.pretrained,
+            "classes": 1
         }
 
     lightning_model = LightningVesuvius(
