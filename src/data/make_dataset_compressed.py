@@ -134,7 +134,7 @@ class DatasetVesuviusCompressed(Dataset):
             torch.manual_seed(seed)
             mask = torch.squeeze(self.transforms(mask))
 
-        return fragment, bbox, mask, image
+        return mask, image
 
 
 if __name__ == '__main__':

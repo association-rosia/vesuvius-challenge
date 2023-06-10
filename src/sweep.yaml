@@ -31,34 +31,24 @@ parameters:
     q: 1e-5
 
   bce_weight:
-    distribution: q_uniform
-    min: 0
-    max: 1
-    q: 0.01
-
-  dice_threshold:
-    distribution: q_uniform
-    min: 0
-    max: 1
-    q: 0.01
+    distribution: constant
+    value: 1
 
   tile_size:
     distribution: constant
     value: 256
 
   num_slices:
-    distribution: int_uniform
-    min: 5
-    max: 15
+    distribution: constant
+    value: 3
 
   start_slice:
-    distribution: int_uniform
-    min: 0
-    max: 59
+    distribution: constant
+    value: 0
 
   reverse_slices:
-    distribution: categorical
-    values: [true, false]
+    distribution: constant
+    value: false
 
   selection_thr:
     distribution: constant
@@ -68,10 +58,10 @@ parameters:
     distribution: constant
     value: true
 
-  train_fragments:
+  fragments:
     distribution: constant
-    value: ['1', '2']
+    value: ['1', '2', '3']
 
-  val_fragment:
-    distribution: constant
-    value: '3'
+  n_splits:
+  distribution: constant
+  value: 5

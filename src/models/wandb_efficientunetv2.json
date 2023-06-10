@@ -1,0 +1,21 @@
+{
+    "project": "vesuvius-challenge-ink-detection",
+    "entity": "rosia-lab",
+    "group": "EfficientUNetV2",
+    "config": {
+        "model_name": "EfficientUNetV2_M",
+        "epochs": 10,
+        "batch_size": 16,
+        "learning_rate": 1e-3,
+        "bce_weight": 1,
+        "dice_threshold": 0.5,
+        "tile_size": 256,
+        "num_slices": 3,
+        "reverse_slices": 0,
+        "start_slice": 0,
+        "selection_thr": 0.05,
+        "augmentation": 1,
+        "fragments": ["1", "2", "3"],
+        "n_splits": 5
+    }
+}

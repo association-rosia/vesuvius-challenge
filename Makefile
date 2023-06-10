@@ -9,7 +9,7 @@ train:
 ifdef dry
 	python src/models/models.py
 else
-	python src/models/train_model.py
+	python src/models/make_train.py -m $(model)
 endif
 
 wandb:
