@@ -27,10 +27,24 @@ import wandb
 
 
 def main():
-    pass
+    splits = KFold(n_splits=wandb.config.n_splits, shuffle=True, random_state=42)
+    dataset_vesuvius = get_dataset()
+    
+    for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset_vesuvius)))):
+        wandb.config.num_split = fold + 1
         
+        train_sampler = SubsetRandomSampler(train_idx)
+        val_sampler = SubsetRandomSampler(val_idx)
+        train_dataloader = DataLoader(dataset_vesuvius, batch_size=wandb.config.batch_size, sampler=train_sampler)
+        val_dataloader = DataLoader(dataset_vesuvius, batch_size=wandb.config.batch_size, sampler=val_sampler)
+    
+        torch.cuda.empty_cache()
+        model = get_model()
+        trainer = get_trainer()
+        trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
 
-def run_kfold():
+
+def main_manual():
     if sys.argv[2] == 'EfficientUNetV2':
         wandb_parameters_path = os.path.join('src', 'models', 'wandb_efficientunetv2.json')
     elif sys.argv[2] == 'efficientnet-b5':
@@ -40,7 +54,7 @@ def run_kfold():
         wandb_parameters = json.load(f)
         
     splits = KFold(n_splits=wandb_parameters['config']['n_splits'], shuffle=True, random_state=42)
-    dataset_vesuvius = get_dataset(wandb_parameters)
+    dataset_vesuvius = get_dataset_manual(wandb_parameters)
     
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset_vesuvius)))):
         wandb_parameters['config']['num_split'] = fold + 1
@@ -136,7 +150,26 @@ def get_dataloaders():
     return train_dataloader, val_dataloader
 
 
-def get_dataset(wandb_parameters):
+def get_dataset():
+    device = get_device()
+    
+    dataset_vesuvius = DatasetVesuvius(
+        fragments=['1', '2', '3'],
+        tile_size=wandb.config.tile_size,
+        num_slices=wandb.config.num_slices,
+        slices_list=None,
+        start_slice=min(wandb.config.start_slice, 64 - wandb.config.num_slices),
+        reverse_slices=wandb.config.reverse_slices,
+        selection_thr=wandb.config.selection_thr,
+        augmentation=wandb.config.augmentation,
+        device=device,
+        overlap=wandb.config.overlap,
+    )
+    
+    return dataset_vesuvius
+
+
+def get_dataset_manual(wandb_parameters):
     device = get_device()
     
     dataset_vesuvius = DatasetVesuvius(
@@ -156,26 +189,18 @@ def get_dataset(wandb_parameters):
 
 
 def get_trainer():
-    checkpoint_callback_val_loss = ModelCheckpoint(
-        save_top_k=1,
-        monitor='val/loss',
-        mode='min',
-        dirpath=cst.MODELS_DIR,
-        filename=f'{wandb.run.name}-{wandb.run.id}-val-loss',
-    )
-    
-    checkpoint_callback_f05score = ModelCheckpoint(
+    checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
         monitor='val/sub_f05_score',
         mode='max',
         dirpath=cst.MODELS_DIR,
-        filename=f'{wandb.run.name}-{wandb.run.id}-sub-f05-score',
+        filename=f'{wandb.run.name}-{wandb.run.id}-{wandb.config.start_slice}-{wandb.config.num_slices}-{wandb.config.num_split}',
     )
 
     trainer = pl.Trainer(
         accelerator='gpu',
         max_epochs=wandb.config.epochs,
-        callbacks=[checkpoint_callback_f05score, checkpoint_callback_val_loss],
+        callbacks=[checkpoint_callback],
         logger=WandbLogger(),
         log_every_n_steps=1,
     )
@@ -186,11 +211,11 @@ def get_trainer():
 if __name__ == '__main__':
 
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
-        run_kfold()
+        main_manual()
     else:
         wandb.init(project='vesuvius-challenge-ink-detection',
                    entity='rosia-lab',
-                   group='EfficientUNetV2'
+                   group='efficientnet-b5'
                    )
 
-    main()
+        main()

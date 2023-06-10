@@ -1,20 +1,15 @@
 program: src/models/make_train.py
 
-method: bayes
+method: grid
 
 metric:
   goal: maximize
-  name: val/f05_score
-
-early_terminate:
-  type: hyperband
-  min_iter: 2
-  eta: 2
+  name: val/sub_f05_score
 
 parameters:
   model_name:
     distribution: constant
-    value: 'EfficientUNetV2_M'
+    value: 'efficientnet-b5'
 
   epochs:
     distribution: constant
@@ -25,14 +20,20 @@ parameters:
     value: 16
 
   learning_rate:
-    distribution: q_uniform
-    min: 1e-5
-    max: 1e-3
-    q: 1e-5
+    distribution: constant
+    value: 1e-4
 
   bce_weight:
     distribution: constant
-    value: 1
+    value: 0.5
+
+  dice_threshold:
+    distribution: constant
+    value: 0.5
+
+  encoder_weights:
+    distribution: constant
+    value: "imagenet"
 
   tile_size:
     distribution: constant
@@ -40,11 +41,13 @@ parameters:
 
   num_slices:
     distribution: constant
-    value: 3
+    value: 16
 
   start_slice:
-    distribution: constant
-    value: 0
+    distribution: q_uniform
+    min: 0
+    max: 48
+    q: 8
 
   reverse_slices:
     distribution: constant
@@ -63,5 +66,9 @@ parameters:
     value: ['1', '2', '3']
 
   n_splits:
-  distribution: constant
-  value: 5
+    distribution: constant
+    value: 3
+
+  overlap:
+    distribution: constant
+    value: 1
