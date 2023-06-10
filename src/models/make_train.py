@@ -27,6 +27,12 @@ import wandb
 
 
 def main():
+    wandb.init(
+        project='vesuvius-challenge-ink-detection',
+        entity='rosia-lab',
+        group='efficientnet-b5'
+    )
+    
     splits = KFold(n_splits=wandb.config.n_splits, shuffle=True, random_state=42)
     dataset_vesuvius = get_dataset()
     
@@ -213,9 +219,4 @@ if __name__ == '__main__':
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
         main_manual()
     else:
-        wandb.init(project='vesuvius-challenge-ink-detection',
-                   entity='rosia-lab',
-                   group='efficientnet-b5'
-                   )
-
         main()
