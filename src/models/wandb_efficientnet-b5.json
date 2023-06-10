@@ -6,7 +6,7 @@
         "model_name": "efficientnet-b5",
         "epochs": 10,
         "batch_size": 16,
-        "learning_rate": 1e-3,
+        "learning_rate": 1e-4,
         "bce_weight": 0.5,
         "dice_threshold": 0.5,
         "encoder_weights": "imagenet",
@@ -17,6 +17,7 @@
         "selection_thr": 0.05,
         "augmentation": 1,
         "fragments": ["1", "2", "3"],
-        "n_splits": 3
+        "n_splits": 3,
+        "overlap": 1
     }
 }

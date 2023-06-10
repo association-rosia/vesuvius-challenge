@@ -148,7 +148,8 @@ def get_dataset(wandb_parameters):
         reverse_slices=wandb_parameters['config']['reverse_slices'],
         selection_thr=wandb_parameters['config']['selection_thr'],
         augmentation=wandb_parameters['config']['augmentation'],
-        device=device
+        device=device,
+        overlap=wandb_parameters['config']['overlap'],
     )
     
     return dataset_vesuvius
