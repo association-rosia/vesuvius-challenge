@@ -77,7 +77,7 @@ def get_model():
     elif 'efficientnet' in wandb.config.model_name:
         model_params = {
             "in_channels": wandb.config.num_slices,
-            "encoder_weights": wandb.config.pretrained,
+            "encoder_weights": wandb.config.encoder_weights,
             "classes": 1
         }
 

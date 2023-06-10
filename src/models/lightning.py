@@ -5,6 +5,7 @@ sys.path.insert(1, parent)
 
 import cv2
 
+import torch
 import torch.nn as nn
 from torch.optim import AdamW
 import pytorch_lightning as pl
@@ -56,6 +57,7 @@ class LightningVesuvius(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         masks, images = batch
         outputs = self.forward(images)
+        # outputs = torch.squeeze(outputs, dim=1)
         loss = self.criterion(outputs, masks)
         self.log('val/loss', loss, on_epoch=True)
         outputs = self.sigmoid(outputs)
