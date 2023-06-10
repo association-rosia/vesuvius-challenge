@@ -11,7 +11,7 @@
         "dice_threshold": 0.5,
         "encoder_weights": "imagenet",
         "tile_size": 256,
-        "num_slices": 5,
+        "num_slices": 16,
         "reverse_slices": 0,
         "start_slice": 0,
         "selection_thr": 0.05,
