@@ -201,7 +201,7 @@ def get_trainer():
         monitor='val/sub_f05_score',
         mode='max',
         dirpath=cst.MODELS_DIR,
-        filename=f'{wandb.run.name}-{wandb.run.id}-{wandb.config.start_slice}-{wandb.config.num_slices}-{wandb.config.num_split}',
+        filename=f'{wandb.run.name}-{wandb.run.id}-{wandb.config.start_slice}-{wandb.config.num_slices}-{wandb.config.fold}',
     )
 
     trainer = pl.Trainer(
