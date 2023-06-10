@@ -47,7 +47,7 @@ class LightningVesuvius(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
-        masks, images = batch
+        _, _, masks, images = batch
         outputs = self.forward(images)
         loss = self.criterion(outputs, masks)
         self.log('train/loss', loss, on_step=True, on_epoch=True)
@@ -55,7 +55,7 @@ class LightningVesuvius(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        masks, images = batch
+        _, _, masks, images = batch
         outputs = self.forward(images)
         # outputs = torch.squeeze(outputs, dim=1)
         loss = self.criterion(outputs, masks)

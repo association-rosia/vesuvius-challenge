@@ -139,7 +139,7 @@ def get_dataloaders():
 def get_dataset(wandb_parameters):
     device = get_device()
     
-    dataset_vesuvius = DatasetVesuviusCompressed(
+    dataset_vesuvius = DatasetVesuvius(
         fragments=['1', '2', '3'],
         tile_size=wandb_parameters['config']['tile_size'],
         num_slices=wandb_parameters['config']['num_slices'],
