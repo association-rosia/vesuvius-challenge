@@ -3,9 +3,10 @@ import sys
 
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
+import json
+
 import numpy as np
 from sklearn.model_selection import KFold
-
 
 import torch
 from torch.utils.data import DataLoader
@@ -26,12 +27,26 @@ import wandb
 
 
 def main():
-    splits = KFold(n_splits=wandb.config.n_splits,shuffle=True,random_state=42)
-    dataset_vesuvius = get_dataset()
+    pass
+        
+
+def run_kfold():
+    if sys.argv[2] == 'EfficientUNetV2':
+        wandb_parameters_path = os.path.join('src', 'models', 'wandb_efficientunetv2.json')
+    
+    with open(wandb_parameters_path, mode='r') as f:
+        wandb_parameters = json.load(f)
+        
+    splits = KFold(n_splits=wandb_parameters['config']['n_splits'], shuffle=True, random_state=42)
+    dataset_vesuvius = get_dataset(wandb_parameters)
     
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset_vesuvius)))):
-
-        print('Fold {}'.format(fold + 1))
+        wandb_parameters['config']['num_split'] = fold + 1
+        
+        wandb.init(
+            **wandb_parameters
+        )
+        
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
         train_dataloader = DataLoader(dataset_vesuvius, batch_size=wandb.config.batch_size, sampler=train_sampler)
@@ -41,6 +56,8 @@ def main():
         model = get_model()
         trainer = get_trainer()
         trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
+        
+        wandb.finish()
 
 
 def get_model():
@@ -113,18 +130,18 @@ def get_dataloaders():
     return train_dataloader, val_dataloader
 
 
-def get_dataset():
+def get_dataset(wandb_parameters):
     device = get_device()
     
     dataset_vesuvius = DatasetVesuviusCompressed(
         fragments=['1', '2', '3'],
-        tile_size=wandb.config.tile_size,
-        num_slices=wandb.config.num_slices,
+        tile_size=wandb_parameters['config']['tile_size'],
+        num_slices=wandb_parameters['config']['num_slices'],
         slices_list=None,
-        start_slice=min(wandb.config.start_slice, 64 - wandb.config.num_slices),
-        reverse_slices=wandb.config.reverse_slices,
-        selection_thr=wandb.config.selection_thr,
-        augmentation=wandb.config.augmentation,
+        start_slice=min(wandb_parameters['config']['start_slice'], 64 - wandb_parameters['config']['num_slices']),
+        reverse_slices=wandb_parameters['config']['reverse_slices'],
+        selection_thr=wandb_parameters['config']['selection_thr'],
+        augmentation=wandb_parameters['config']['augmentation'],
         device=device
     )
     
@@ -150,12 +167,10 @@ def get_trainer():
 
     trainer = pl.Trainer(
         accelerator='gpu',
-        # max_epochs=wandb.config.epochs,
+        max_epochs=wandb.config.epochs,
         callbacks=[checkpoint_callback_f05score, checkpoint_callback_val_loss],
         logger=WandbLogger(),
         log_every_n_steps=1,
-        max_epochs=3,
-        limit_train_batches=5,
     )
 
     return trainer
@@ -164,14 +179,7 @@ def get_trainer():
 if __name__ == '__main__':
 
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
-        import json
-        if sys.argv[2] == 'EfficientUNetV2':
-            wandb_parameters_path = os.path.join('src', 'models', 'wandb_efficientunetv2.json')
-        
-        with open(wandb_parameters_path, mode='r') as f:
-            wandb_parameters = json.load(f)
-        
-        wandb.init(**wandb_parameters)
+        run_kfold()
     else:
         wandb.init(project='vesuvius-challenge-ink-detection',
                    entity='rosia-lab',
