@@ -45,9 +45,7 @@ def run_kfold():
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset_vesuvius)))):
         wandb_parameters['config']['num_split'] = fold + 1
         
-        wandb.init(
-            **wandb_parameters
-        )
+        wandb.init(**wandb_parameters)
         
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
