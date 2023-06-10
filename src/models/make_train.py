@@ -37,7 +37,8 @@ def main():
     dataset_vesuvius = get_dataset()
     
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset_vesuvius)))):
-        wandb.config.num_split = fold + 1
+        if not wandb.config.fold == fold + 1:
+            continue
         
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
