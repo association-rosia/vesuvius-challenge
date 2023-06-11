@@ -13,7 +13,7 @@ parameters:
 
   epochs:
     distribution: constant
-    value: 10
+    value: 30
 
   batch_size:
     distribution: constant
