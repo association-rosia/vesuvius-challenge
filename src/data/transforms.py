@@ -5,7 +5,13 @@ import torch
 
 import numpy as np
 
-from ttach.base import DualTransform
+import os
+import sys
+
+parent = os.path.abspath(os.path.curdir)
+sys.path.insert(1, parent)
+
+from .ttach.ttach.base import DualTransform
 
 
 from typing import List
