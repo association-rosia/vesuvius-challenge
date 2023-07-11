@@ -7,7 +7,7 @@ This exciting competition, available on Kaggle and supported by the Vesuvius Cha
 
 ## 📷 Tilling Method
 
-<img src='assets/tilling.gif' alt='Ink labels with tilling method performing on it'>
+<img src='assets/tilling.gif' style='width: 50%' alt='Ink labels with tilling method performing on it'>
 
 In order to process the ultra-high definition images effectively, we employed an image tiling method. The images were divided into smaller sub-images with a size of 256 by 256 pixels to feed into the model. This approach allowed us to handle the large dataset more efficiently. Additionally, we implemented a selection criterion where we only considered tiles that contained a minimum of 5% ink pixels. By focusing on these specific tiles, we were able to concentrate our efforts on the areas most likely to contain valuable information within the ancient scrolls.
 
