@@ -13,7 +13,7 @@ In order to process the ultra-high definition images effectively, we employed an
 
 ## 🤖 Model architecture
 
-<img src='assets/model_architecture.png' alt='Architecture of EficientUnet V2 model'>
+<img src='assets/model_architecture.png' style='width: 80%' alt='Architecture of EficientUnet V2 model'>
 
 ## 🔬 Team 
 
