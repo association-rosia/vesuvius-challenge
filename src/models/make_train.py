@@ -3,8 +3,15 @@ import sys
 
 sys.path.insert(1, os.path.abspath(os.path.curdir))
 
+import json
+
+import numpy as np
+from sklearn.model_selection import KFold
+
 import torch
 from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, SubsetRandomSampler
+
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -12,7 +19,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from src.data.make_dataset import DatasetVesuvius
 from src.data.make_dataset_compressed import DatasetVesuviusCompressed
 from src.models.lightning import LightningVesuvius
-from src.utils import get_fragment_shape, get_device
+from src.utils import get_device
 
 import src.constant as cst
 
@@ -20,11 +27,58 @@ import wandb
 
 
 def main():
-    torch.cuda.empty_cache()
-    model = get_model()
-    train_dataloader, val_dataloader = get_dataloaders()
-    trainer = get_trainer()
-    trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
+    wandb.init(
+        project='vesuvius-challenge-ink-detection',
+        entity='rosia-lab',
+        group='efficientnet-b5'
+    )
+    
+    splits = KFold(n_splits=wandb.config.n_splits, shuffle=True, random_state=42)
+    dataset_vesuvius = get_dataset()
+    
+    for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset_vesuvius)))):
+        if not wandb.config.fold == fold + 1:
+            continue
+        
+        train_sampler = SubsetRandomSampler(train_idx)
+        val_sampler = SubsetRandomSampler(val_idx)
+        train_dataloader = DataLoader(dataset_vesuvius, batch_size=wandb.config.batch_size, sampler=train_sampler)
+        val_dataloader = DataLoader(dataset_vesuvius, batch_size=wandb.config.batch_size, sampler=val_sampler)
+    
+        torch.cuda.empty_cache()
+        model = get_model()
+        trainer = get_trainer()
+        trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
+
+
+def main_manual():
+    if sys.argv[2] == 'EfficientUNetV2':
+        wandb_parameters_path = os.path.join('src', 'models', 'wandb_efficientunetv2.json')
+    elif sys.argv[2] == 'efficientnet-b5':
+        wandb_parameters_path = os.path.join('src', 'models', 'wandb_efficientnet-b5.json')
+    
+    with open(wandb_parameters_path, mode='r') as f:
+        wandb_parameters = json.load(f)
+        
+    splits = KFold(n_splits=wandb_parameters['config']['n_splits'], shuffle=True, random_state=42)
+    dataset_vesuvius = get_dataset_manual(wandb_parameters)
+    
+    for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset_vesuvius)))):
+        wandb_parameters['config']['num_split'] = fold + 1
+        
+        wandb.init(**wandb_parameters)
+        
+        train_sampler = SubsetRandomSampler(train_idx)
+        val_sampler = SubsetRandomSampler(val_idx)
+        train_dataloader = DataLoader(dataset_vesuvius, batch_size=wandb.config.batch_size, sampler=train_sampler)
+        val_dataloader = DataLoader(dataset_vesuvius, batch_size=wandb.config.batch_size, sampler=val_sampler)
+    
+        torch.cuda.empty_cache()
+        model = get_model()
+        trainer = get_trainer()
+        trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
+        
+        wandb.finish()
 
 
 def get_model():
@@ -39,17 +93,19 @@ def get_model():
         model_params = {
             'in_channels': wandb.config.num_slices,
         }
+    elif 'efficientnet' in wandb.config.model_name:
+        model_params = {
+            "in_channels": wandb.config.num_slices,
+            "encoder_weights": wandb.config.encoder_weights,
+            "classes": 1
+        }
 
     lightning_model = LightningVesuvius(
         model_name=wandb.config.model_name,
         model_params=model_params,
         learning_rate=wandb.config.learning_rate,
         bce_weight=wandb.config.bce_weight,
-        dice_threshold=wandb.config.dice_threshold,
-        val_fragment_id=wandb.config.val_fragment,
-        val_fragment_shape=get_fragment_shape(cst.TRAIN_FRAGMENTS_PATH,
-                                              wandb.config.val_fragment,
-                                              wandb.config.tile_size),
+        dice_threshold=wandb.config.dice_threshold
     )
 
     return lightning_model
@@ -101,13 +157,51 @@ def get_dataloaders():
     return train_dataloader, val_dataloader
 
 
+def get_dataset():
+    device = get_device()
+    
+    dataset_vesuvius = DatasetVesuvius(
+        fragments=['1', '2', '3'],
+        tile_size=wandb.config.tile_size,
+        num_slices=wandb.config.num_slices,
+        slices_list=None,
+        start_slice=min(wandb.config.start_slice, 64 - wandb.config.num_slices),
+        reverse_slices=wandb.config.reverse_slices,
+        selection_thr=wandb.config.selection_thr,
+        augmentation=wandb.config.augmentation,
+        device=device,
+        overlap=wandb.config.overlap,
+    )
+    
+    return dataset_vesuvius
+
+
+def get_dataset_manual(wandb_parameters):
+    device = get_device()
+    
+    dataset_vesuvius = DatasetVesuvius(
+        fragments=['1', '2', '3'],
+        tile_size=wandb_parameters['config']['tile_size'],
+        num_slices=wandb_parameters['config']['num_slices'],
+        slices_list=None,
+        start_slice=min(wandb_parameters['config']['start_slice'], 64 - wandb_parameters['config']['num_slices']),
+        reverse_slices=wandb_parameters['config']['reverse_slices'],
+        selection_thr=wandb_parameters['config']['selection_thr'],
+        augmentation=wandb_parameters['config']['augmentation'],
+        device=device,
+        overlap=wandb_parameters['config']['overlap'],
+    )
+    
+    return dataset_vesuvius
+
+
 def get_trainer():
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
-        monitor='val/f05_score',
+        monitor='val/sub_f05_score',
         mode='max',
         dirpath=cst.MODELS_DIR,
-        filename=f'{wandb.run.name}-{wandb.run.id}',
+        filename=f'{wandb.run.name}-{wandb.run.id}-{wandb.config.start_slice}-{wandb.config.num_slices}-{wandb.config.fold}',
     )
 
     trainer = pl.Trainer(
@@ -115,7 +209,7 @@ def get_trainer():
         max_epochs=wandb.config.epochs,
         callbacks=[checkpoint_callback],
         logger=WandbLogger(),
-        log_every_n_steps=1
+        log_every_n_steps=1,
     )
 
     return trainer
@@ -124,31 +218,6 @@ def get_trainer():
 if __name__ == '__main__':
 
     if sys.argv[1] == '--manual' or sys.argv[1] == '-m':
-        wandb.init(
-            project='vesuvius-challenge-ink-detection',
-            entity='rosia-lab',
-            group='EfficientUNetV2',
-            config={
-                'model_name': cst.MODEL_NAME,
-                'epochs': cst.EPOCHS,
-                'batch_size': cst.BATCH_SIZE,
-                'learning_rate': cst.LEARNING_RATE,
-                'bce_weight': cst.BCE_WEIGHT,
-                'dice_threshold': cst.DICE_THRESHOLD,
-                'tile_size': cst.TILE_SIZE,
-                'num_slices': cst.NUM_SLICES,
-                'reverse_slices': cst.REVERSE_SLICES,
-                'start_slice': cst.START_SLICE,
-                'selection_thr': cst.SELECTION_THR,
-                'augmentation': cst.AUGMENTATION,
-                'train_fragments': cst.TRAIN_FRAGMENTS,
-                'val_fragment': cst.VAL_FRAGMENT,
-            },
-        )
+        main_manual()
     else:
-        wandb.init(project='vesuvius-challenge-ink-detection',
-                   entity='rosia-lab',
-                   group='EfficientUNetV2'
-                   )
-
-    main()
+        main()

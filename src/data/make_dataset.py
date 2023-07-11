@@ -24,7 +24,7 @@ from src.constant import TRAIN_FRAGMENTS_PATH
 
 
 class DatasetVesuvius(Dataset):
-    def __init__(self, fragments, tile_size, num_slices, slices_list, start_slice, reverse_slices, selection_thr, augmentation, device):
+    def __init__(self, fragments, tile_size, num_slices, slices_list, start_slice, reverse_slices, selection_thr, augmentation, device, overlap):
         self.fragments = fragments
         self.tile_size = tile_size
         self.num_slices = num_slices
@@ -35,7 +35,7 @@ class DatasetVesuvius(Dataset):
         self.augmentation = augmentation
         self.device = device
 
-        self.overlap = 0.5
+        self.overlap = overlap
         self.set_path = TRAIN_FRAGMENTS_PATH
         self.slices = self.make_slices()
         self.data, self.items = self.make_data()
@@ -133,6 +133,6 @@ class DatasetVesuvius(Dataset):
             torch.manual_seed(seed)
             image = self.transforms(image)
             torch.manual_seed(seed)
-            mask = torch.squeeze(self.transforms(mask))
+            mask = self.transforms(mask)
 
         return fragment, bbox, mask, image

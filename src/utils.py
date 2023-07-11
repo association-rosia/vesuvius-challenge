@@ -4,7 +4,7 @@ sys.path.insert(0, os.pardir)
 
 import torch
 import cv2
-from src.constant import TRAIN_FRAGMENTS_PATH, TILE_SIZE
+from src.constant import TRAIN_FRAGMENTS_PATH
 import numpy as np
 
 
