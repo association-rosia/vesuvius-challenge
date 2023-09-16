@@ -15,6 +15,10 @@ In order to process the ultra-high definition images effectively, we employed an
 
 <img src='assets/model_architecture.png' style='width: 80%' alt='Architecture of EficientUnet V2 model'>
 
+## 🛡️ License
+
+Project is distributed under [MIT License](https://github.com/association-rosia/vesuvius-challenge/blob/main/LICENSE)
+
 ## Contributors
 
 Louis REBERGA <a href="https://twitter.com/rbrgAlou"><img src="https://abs.twimg.com/favicons/twitter.3.ico" width="18px"/></a> <a href="https://www.linkedin.com/in/louisreberga/"><img src="https://static.licdn.com/sc/h/akt4ae504epesldzj74dzred8" width="18px"/></a> <a href="louis.reberga@gmail.com"><img src="https://www.google.com/a/cpanel/aqsone.com/images/favicon.ico" width="18px"/></a>
