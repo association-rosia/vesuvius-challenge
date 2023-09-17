@@ -15,6 +15,19 @@ In order to process the ultra-high definition images effectively, we employed an
 
 <img src='assets/model_architecture.png' style='width: 80%' alt='Architecture of EficientUnet V2 model'>
 
+## 📝 Citing
+
+```
+@misc{RebergaUrgell:2023,
+  Author = {Louis Reberga and Baptiste Urgell},
+  Title = {Vesuvius Challenge - Ink Detection},
+  Year = {2023},
+  Publisher = {GitHub},
+  Journal = {GitHub repository},
+  Howpublished = {\url{https://github.com/association-rosia/vesuvius-challenge}}
+}
+```
+
 ## 🛡️ License
 
 Project is distributed under [MIT License](https://github.com/association-rosia/vesuvius-challenge/blob/main/LICENSE)
