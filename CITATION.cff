@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "REBERGA"
+  given-names: "Louis"
+- family-names: "URGELL"
+  given-names: "Baptiste"
+title: "GitHub repository"
+publisher: "Github"
+year: "2023"
+version: 1.0
+date-released: 2023-8-1
+url: "https://github.com/association-rosia/vesuvius-challenge"
+data: "Vesuvius Challenge"
