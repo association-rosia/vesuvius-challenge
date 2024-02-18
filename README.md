@@ -1,5 +1,5 @@
 # 📜 Vesuvius Challenge - Ink Detection
-<img src='assets/header.png' alt=''>
+<img src='assets/vesuvius-challenge.png' alt=''>
 
 This exciting competition, available on Kaggle and supported by the Vesuvius Challenge organization, aims to bring back to life an ancient library buried under the ashes of a volcano. In this competition, our mission was to detect ink from 3D X-ray scanners. Thousands of scrolls were part of a library located in a Roman villa in Herculaneum. This villa was buried by the eruption of Mount Vesuvius nearly 2000 years ago. The scrolls were charred by the heat of the volcano and are now impossible to open without damaging them.
 
